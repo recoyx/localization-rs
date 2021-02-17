@@ -1,0 +1,922 @@
+{
+    "aa": {
+        "universal_name": "Afar",
+        "direction": 1,
+        "native_name": "Afar"
+    },
+    "ab": {
+        "universal_name": "Abkhazian",
+        "direction": 1,
+        "native_name": "Аҧсуа"
+    },
+    "af": {
+        "universal_name": "Afrikaans",
+        "direction": 1,
+        "native_name": "Afrikaans"
+    },
+    "ak": {
+        "universal_name": "Akan",
+        "direction": 1,
+        "native_name": "Akana"
+    },
+    "am": {
+        "universal_name": "Amharic",
+        "direction": 1,
+        "native_name": "አማርኛ"
+    },
+    "an": {
+        "universal_name": "Aragonese",
+        "direction": 1,
+        "native_name": "Aragonés"
+    },
+    "ar": {
+        "universal_name": "Arabic",
+        "direction": 0,
+        "native_name": "العربية"
+    },
+    "as": {
+        "universal_name": "Assamese",
+        "direction": 1,
+        "native_name": "অসমীয়া"
+    },
+    "av": {
+        "universal_name": "Avar",
+        "direction": 1,
+        "native_name": "Авар"
+    },
+    "ay": {
+        "universal_name": "Aymara",
+        "direction": 1,
+        "native_name": "Aymar"
+    },
+    "az": {
+        "universal_name": "Azerbaijani",
+        "direction": 1,
+        "native_name": "Azərbaycanca / آذربايجان"
+    },
+    "ba": {
+        "universal_name": "Bashkir",
+        "direction": 1,
+        "native_name": "Башҡорт"
+    },
+    "be": {
+        "universal_name": "Belarusian",
+        "direction": 1,
+        "native_name": "Беларуская"
+    },
+    "bg": {
+        "universal_name": "Bulgarian",
+        "direction": 1,
+        "native_name": "Български"
+    },
+    "bh": {
+        "universal_name": "Bihari",
+        "direction": 1,
+        "native_name": "भोजपुरी"
+    },
+    "bi": {
+        "universal_name": "Bislama",
+        "direction": 1,
+        "native_name": "Bislama"
+    },
+    "bm": {
+        "universal_name": "Bambara",
+        "direction": 1,
+        "native_name": "Bamanankan"
+    },
+    "bn": {
+        "universal_name": "Bengali",
+        "direction": 1,
+        "native_name": "বাংলা"
+    },
+    "bo": {
+        "universal_name": "Tibetan",
+        "direction": 1,
+        "native_name": "བོད་ཡིག / Bod skad"
+    },
+    "br": {
+        "universal_name": "Breton",
+        "direction": 1,
+        "native_name": "Brezhoneg"
+    },
+    "bs": {
+        "universal_name": "Bosnian",
+        "direction": 1,
+        "native_name": "Bosanski"
+    },
+    "ca": {
+        "universal_name": "Catalan",
+        "direction": 1,
+        "native_name": "Català"
+    },
+    "ce": {
+        "universal_name": "Chechen",
+        "direction": 1,
+        "native_name": "Нохчийн"
+    },
+    "ch": {
+        "universal_name": "Chamorro",
+        "direction": 1,
+        "native_name": "Chamoru"
+    },
+    "co": {
+        "universal_name": "Corsican",
+        "direction": 1,
+        "native_name": "Corsu"
+    },
+    "cr": {
+        "universal_name": "Cree",
+        "direction": 1,
+        "native_name": "Nehiyaw"
+    },
+    "cs": {
+        "universal_name": "Czech",
+        "direction": 1,
+        "native_name": "Česky"
+    },
+    "cu": {
+        "universal_name": "Old Church Slavonic / Old Bulgarian",
+        "direction": 1,
+        "native_name": "словѣньскъ / slověnĭskŭ"
+    },
+    "cv": {
+        "universal_name": "Chuvash",
+        "direction": 1,
+        "native_name": "Чăваш"
+    },
+    "cy": {
+        "universal_name": "Welsh",
+        "direction": 1,
+        "native_name": "Cymraeg"
+    },
+    "da": {
+        "universal_name": "Danish",
+        "direction": 1,
+        "native_name": "Dansk"
+    },
+    "de": {
+        "universal_name": "German",
+        "direction": 1,
+        "native_name": "Deutsch"
+    },
+    "dv": {
+        "universal_name": "Divehi",
+        "direction": 0,
+        "native_name": "ދިވެހިބަސް"
+    },
+    "dz": {
+        "universal_name": "Dzongkha",
+        "direction": 1,
+        "native_name": "ཇོང་ཁ"
+    },
+    "ee": {
+        "universal_name": "Ewe",
+        "direction": 1,
+        "native_name": "Ɛʋɛ"
+    },
+    "el": {
+        "universal_name": "Greek",
+        "direction": 1,
+        "native_name": "Ελληνικά"
+    },
+    "en": {
+        "universal_name": "English",
+        "direction": 1,
+        "native_name": "English"
+    },
+    "eo": {
+        "universal_name": "Esperanto",
+        "direction": 1,
+        "native_name": "Esperanto"
+    },
+    "es": {
+        "universal_name": "Spanish",
+        "direction": 1,
+        "native_name": "Español"
+    },
+    "et": {
+        "universal_name": "Estonian",
+        "direction": 1,
+        "native_name": "Eesti"
+    },
+    "eu": {
+        "universal_name": "Basque",
+        "direction": 1,
+        "native_name": "Euskara"
+    },
+    "fa": {
+        "universal_name": "Persian",
+        "direction": 0,
+        "native_name": "فارسی"
+    },
+    "ff": {
+        "universal_name": "Peul",
+        "direction": 1,
+        "native_name": "Fulfulde"
+    },
+    "fi": {
+        "universal_name": "Finnish",
+        "direction": 1,
+        "native_name": "Suomi"
+    },
+    "fj": {
+        "universal_name": "Fijian",
+        "direction": 1,
+        "native_name": "Na Vosa Vakaviti"
+    },
+    "fo": {
+        "universal_name": "Faroese",
+        "direction": 1,
+        "native_name": "Føroyskt"
+    },
+    "fr": {
+        "universal_name": "French",
+        "direction": 1,
+        "native_name": "Français"
+    },
+    "fy": {
+        "universal_name": "West Frisian",
+        "direction": 1,
+        "native_name": "Frysk"
+    },
+    "ga": {
+        "universal_name": "Irish",
+        "direction": 1,
+        "native_name": "Gaeilge"
+    },
+    "gd": {
+        "universal_name": "Scottish Gaelic",
+        "direction": 1,
+        "native_name": "Gàidhlig"
+    },
+    "gl": {
+        "universal_name": "Galician",
+        "direction": 1,
+        "native_name": "Galego"
+    },
+    "gn": {
+        "universal_name": "Guarani",
+        "direction": 1,
+        "native_name": "Avañe\"ẽ"
+    },
+    "gu": {
+        "universal_name": "Gujarati",
+        "direction": 1,
+        "native_name": "ગુજરાતી"
+    },
+    "gv": {
+        "universal_name": "Manx",
+        "direction": 1,
+        "native_name": "Gaelg"
+    },
+    "ha": {
+        "universal_name": "Hausa",
+        "direction": 0,
+        "native_name": "هَوُسَ"
+    },
+    "he": {
+        "universal_name": "Hebrew",
+        "direction": 0,
+        "native_name": "עברית"
+    },
+    "hi": {
+        "universal_name": "Hindi",
+        "direction": 1,
+        "native_name": "हिन्दी"
+    },
+    "ho": {
+        "universal_name": "Hiri Motu",
+        "direction": 1,
+        "native_name": "Hiri Motu"
+    },
+    "hr": {
+        "universal_name": "Croatian",
+        "direction": 1,
+        "native_name": "Hrvatski"
+    },
+    "ht": {
+        "universal_name": "Haitian",
+        "direction": 1,
+        "native_name": "Krèyol ayisyen"
+    },
+    "hu": {
+        "universal_name": "Hungarian",
+        "direction": 1,
+        "native_name": "Magyar"
+    },
+    "hy": {
+        "universal_name": "Armenian",
+        "direction": 1,
+        "native_name": "Հայերեն"
+    },
+    "hz": {
+        "universal_name": "Herero",
+        "direction": 1,
+        "native_name": "Otsiherero"
+    },
+    "ia": {
+        "universal_name": "Interlingua",
+        "direction": 1,
+        "native_name": "Interlingua"
+    },
+    "id": {
+        "universal_name": "Indonesian",
+        "direction": 1,
+        "native_name": "Bahasa Indonesia"
+    },
+    "ie": {
+        "universal_name": "Interlingue",
+        "direction": 1,
+        "native_name": "Interlingue"
+    },
+    "ig": {
+        "universal_name": "Igbo",
+        "direction": 1,
+        "native_name": "Igbo"
+    },
+    "ii": {
+        "universal_name": "Sichuan Yi",
+        "direction": 1,
+        "native_name": "ꆇꉙ / 四川彝语"
+    },
+    "ik": {
+        "universal_name": "Inupiak",
+        "direction": 1,
+        "native_name": "Iñupiak"
+    },
+    "io": {
+        "universal_name": "Ido",
+        "direction": 1,
+        "native_name": "Ido"
+    },
+    "is": {
+        "universal_name": "Icelandic",
+        "direction": 1,
+        "native_name": "Íslenska"
+    },
+    "it": {
+        "universal_name": "Italian",
+        "direction": 1,
+        "native_name": "Italiano"
+    },
+    "iu": {
+        "universal_name": "Inuktitut",
+        "direction": 1,
+        "native_name": "ᐃᓄᒃᑎᑐᑦ"
+    },
+    "ja": {
+        "universal_name": "Japanese",
+        "direction": 1,
+        "native_name": "日本語"
+    },
+    "jv": {
+        "universal_name": "Javanese",
+        "direction": 1,
+        "native_name": "Basa Jawa"
+    },
+    "ka": {
+        "universal_name": "Georgian",
+        "direction": 1,
+        "native_name": "ქართული"
+    },
+    "kg": {
+        "universal_name": "Kongo",
+        "direction": 1,
+        "native_name": "KiKongo"
+    },
+    "ki": {
+        "universal_name": "Kikuyu",
+        "direction": 1,
+        "native_name": "Gĩkũyũ"
+    },
+    "kj": {
+        "universal_name": "Kuanyama",
+        "direction": 1,
+        "native_name": "Kuanyama"
+    },
+    "kk": {
+        "universal_name": "Kazakh",
+        "direction": 1,
+        "native_name": "Қазақша"
+    },
+    "kl": {
+        "universal_name": "Greenlandic",
+        "direction": 1,
+        "native_name": "Kalaallisut"
+    },
+    "km": {
+        "universal_name": "Cambodian",
+        "direction": 1,
+        "native_name": "ភាសាខ្មែរ"
+    },
+    "kn": {
+        "universal_name": "Kannada",
+        "direction": 1,
+        "native_name": "ಕನ್ನಡ"
+    },
+    "ko": {
+        "universal_name": "Korean",
+        "direction": 1,
+        "native_name": "한국어"
+    },
+    "kr": {
+        "universal_name": "Kanuri",
+        "direction": 1,
+        "native_name": "Kanuri"
+    },
+    "ks": {
+        "universal_name": "Kashmiri",
+        "direction": 0,
+        "native_name": "कश्मीरी / كشميري"
+    },
+    "ku": {
+        "universal_name": "Kurdish",
+        "direction": 0,
+        "native_name": "Kurdî / كوردی"
+    },
+    "kv": {
+        "universal_name": "Komi",
+        "direction": 1,
+        "native_name": "Коми"
+    },
+    "kw": {
+        "universal_name": "Cornish",
+        "direction": 1,
+        "native_name": "Kernewek"
+    },
+    "ky": {
+        "universal_name": "Kirghiz",
+        "direction": 1,
+        "native_name": "Kırgızca / Кыргызча"
+    },
+    "la": {
+        "universal_name": "Latin",
+        "direction": 1,
+        "native_name": "Latina"
+    },
+    "lb": {
+        "universal_name": "Luxembourgish",
+        "direction": 1,
+        "native_name": "Lëtzebuergesch"
+    },
+    "lg": {
+        "universal_name": "Ganda",
+        "direction": 1,
+        "native_name": "Luganda"
+    },
+    "li": {
+        "universal_name": "Limburgian",
+        "direction": 1,
+        "native_name": "Limburgs"
+    },
+    "ln": {
+        "universal_name": "Lingala",
+        "direction": 1,
+        "native_name": "Lingála"
+    },
+    "lo": {
+        "universal_name": "Laotian",
+        "direction": 1,
+        "native_name": "ລາວ / Pha xa lao"
+    },
+    "lt": {
+        "universal_name": "Lithuanian",
+        "direction": 1,
+        "native_name": "Lietuvių"
+    },
+    "lv": {
+        "universal_name": "Latvian",
+        "direction": 1,
+        "native_name": "Latviešu"
+    },
+    "mg": {
+        "universal_name": "Malagasy",
+        "direction": 1,
+        "native_name": "Malagasy"
+    },
+    "mh": {
+        "universal_name": "Marshallese",
+        "direction": 1,
+        "native_name": "Kajin Majel / Ebon"
+    },
+    "mi": {
+        "universal_name": "Maori",
+        "direction": 1,
+        "native_name": "Māori"
+    },
+    "mk": {
+        "universal_name": "Macedonian",
+        "direction": 1,
+        "native_name": "Македонски"
+    },
+    "ml": {
+        "universal_name": "Malayalam",
+        "direction": 1,
+        "native_name": "മലയാളം"
+    },
+    "mn": {
+        "universal_name": "Mongolian",
+        "direction": 1,
+        "native_name": "Монгол"
+    },
+    "mo": {
+        "universal_name": "Moldovan",
+        "direction": 1,
+        "native_name": "Moldovenească"
+    },
+    "mr": {
+        "universal_name": "Marathi",
+        "direction": 1,
+        "native_name": "मराठी"
+    },
+    "ms": {
+        "universal_name": "Malay",
+        "direction": 1,
+        "native_name": "Bahasa Melayu"
+    },
+    "mt": {
+        "universal_name": "Maltese",
+        "direction": 1,
+        "native_name": "bil-Malti"
+    },
+    "my": {
+        "universal_name": "Burmese",
+        "direction": 1,
+        "native_name": "Myanmasa"
+    },
+    "na": {
+        "universal_name": "Nauruan",
+        "direction": 1,
+        "native_name": "Dorerin Naoero"
+    },
+    "nd": {
+        "universal_name": "North Ndebele",
+        "direction": 1,
+        "native_name": "Sindebele"
+    },
+    "ne": {
+        "universal_name": "Nepali",
+        "direction": 1,
+        "native_name": "नेपाली"
+    },
+    "ng": {
+        "universal_name": "Ndonga",
+        "direction": 1,
+        "native_name": "Oshiwambo"
+    },
+    "nl": {
+        "universal_name": "Dutch",
+        "direction": 1,
+        "native_name": "Nederlands"
+    },
+    "nn": {
+        "universal_name": "Norwegian Nynorsk",
+        "direction": 1,
+        "native_name": "Norsk (nynorsk)"
+    },
+    "no": {
+        "universal_name": "Norwegian",
+        "direction": 1,
+        "native_name": "Norsk (bokmål / riksmål)"
+    },
+    "nr": {
+        "universal_name": "South Ndebele",
+        "direction": 1,
+        "native_name": "isiNdebele"
+    },
+    "nv": {
+        "universal_name": "Navajo",
+        "direction": 1,
+        "native_name": "Diné bizaad"
+    },
+    "ny": {
+        "universal_name": "Chichewa",
+        "direction": 1,
+        "native_name": "Chi-Chewa"
+    },
+    "oc": {
+        "universal_name": "Occitan",
+        "direction": 1,
+        "native_name": "Occitan"
+    },
+    "oj": {
+        "universal_name": "Ojibwa",
+        "direction": 1,
+        "native_name": "ᐊᓂᔑᓈᐯᒧᐎᓐ / Anishinaabemowin"
+    },
+    "om": {
+        "universal_name": "Oromo",
+        "direction": 1,
+        "native_name": "Oromoo"
+    },
+    "or": {
+        "universal_name": "Oriya",
+        "direction": 1,
+        "native_name": "ଓଡ଼ିଆ"
+    },
+    "os": {
+        "universal_name": "Ossetian / Ossetic",
+        "direction": 1,
+        "native_name": "Иронау"
+    },
+    "pa": {
+        "universal_name": "Panjabi / Punjabi",
+        "direction": 1,
+        "native_name": "ਪੰਜਾਬੀ / पंजाबी / پنجابي"
+    },
+    "pi": {
+        "universal_name": "Pali",
+        "direction": 1,
+        "native_name": "Pāli / पाऴि"
+    },
+    "pl": {
+        "universal_name": "Polish",
+        "direction": 1,
+        "native_name": "Polski"
+    },
+    "ps": {
+        "universal_name": "Pashto",
+        "direction": 0,
+        "native_name": "پښتو"
+    },
+    "pt": {
+        "universal_name": "Portuguese",
+        "direction": 1,
+        "native_name": "Português"
+    },
+    "qu": {
+        "universal_name": "Quechua",
+        "direction": 1,
+        "native_name": "Runa Simi"
+    },
+    "rm": {
+        "universal_name": "Raeto Romance",
+        "direction": 1,
+        "native_name": "Rumantsch"
+    },
+    "rn": {
+        "universal_name": "Kirundi",
+        "direction": 1,
+        "native_name": "Kirundi"
+    },
+    "ro": {
+        "universal_name": "Romanian",
+        "direction": 1,
+        "native_name": "Română"
+    },
+    "ru": {
+        "universal_name": "Russian",
+        "direction": 1,
+        "native_name": "Русский"
+    },
+    "rw": {
+        "universal_name": "Rwandi",
+        "direction": 1,
+        "native_name": "Kinyarwandi"
+    },
+    "sa": {
+        "universal_name": "Sanskrit",
+        "direction": 1,
+        "native_name": "संस्कृतम्"
+    },
+    "sc": {
+        "universal_name": "Sardinian",
+        "direction": 1,
+        "native_name": "Sardu"
+    },
+    "sd": {
+        "universal_name": "Sindhi",
+        "direction": 1,
+        "native_name": "सिनधि"
+    },
+    "se": {
+        "universal_name": "Northern Sami",
+        "direction": 1,
+        "native_name": "Davvisámegiella"
+    },
+    "sg": {
+        "universal_name": "Sango",
+        "direction": 1,
+        "native_name": "Sängö"
+    },
+    "sh": {
+        "universal_name": "Serbo-Croatian",
+        "direction": 1,
+        "native_name": "Srpskohrvatski / Српскохрватски"
+    },
+    "si": {
+        "universal_name": "Sinhalese",
+        "direction": 1,
+        "native_name": "සිංහල"
+    },
+    "sk": {
+        "universal_name": "Slovak",
+        "direction": 1,
+        "native_name": "Slovenčina"
+    },
+    "sl": {
+        "universal_name": "Slovenian",
+        "direction": 1,
+        "native_name": "Slovenščina"
+    },
+    "sm": {
+        "universal_name": "Samoan",
+        "direction": 1,
+        "native_name": "Gagana Samoa"
+    },
+    "sn": {
+        "universal_name": "Shona",
+        "direction": 1,
+        "native_name": "chiShona"
+    },
+    "so": {
+        "universal_name": "Somalia",
+        "direction": 1,
+        "native_name": "Soomaaliga"
+    },
+    "sq": {
+        "universal_name": "Albanian",
+        "direction": 1,
+        "native_name": "Shqip"
+    },
+    "sr": {
+        "universal_name": "Serbian",
+        "direction": 1,
+        "native_name": "Српски"
+    },
+    "ss": {
+        "universal_name": "Swati",
+        "direction": 1,
+        "native_name": "SiSwati"
+    },
+    "st": {
+        "universal_name": "Southern Sotho",
+        "direction": 1,
+        "native_name": "Sesotho"
+    },
+    "su": {
+        "universal_name": "Sundanese",
+        "direction": 1,
+        "native_name": "Basa Sunda"
+    },
+    "sv": {
+        "universal_name": "Swedish",
+        "direction": 1,
+        "native_name": "Svenska"
+    },
+    "sw": {
+        "universal_name": "Swahili",
+        "direction": 1,
+        "native_name": "Kiswahili"
+    },
+    "ta": {
+        "universal_name": "Tamil",
+        "direction": 1,
+        "native_name": "தமிழ்"
+    },
+    "te": {
+        "universal_name": "Telugu",
+        "direction": 1,
+        "native_name": "తెలుగు"
+    },
+    "tg": {
+        "universal_name": "Tajik",
+        "direction": 1,
+        "native_name": "Тоҷикӣ"
+    },
+    "th": {
+        "universal_name": "Thai",
+        "direction": 1,
+        "native_name": "ไทย / Phasa Thai"
+    },
+    "ti": {
+        "universal_name": "Tigrinya",
+        "direction": 1,
+        "native_name": "ትግርኛ"
+    },
+    "tk": {
+        "universal_name": "Turkmen",
+        "direction": 1,
+        "native_name": "Туркмен / تركمن"
+    },
+    "tl": {
+        "universal_name": "Tagalog",
+        "direction": 1,
+        "native_name": "Tagalog"
+    },
+    "tn": {
+        "universal_name": "Tswana",
+        "direction": 1,
+        "native_name": "Setswana"
+    },
+    "to": {
+        "universal_name": "Tonga",
+        "direction": 1,
+        "native_name": "Lea Faka-Tonga"
+    },
+    "tr": {
+        "universal_name": "Turkish",
+        "direction": 1,
+        "native_name": "Türkçe"
+    },
+    "ts": {
+        "universal_name": "Tsonga",
+        "direction": 1,
+        "native_name": "Xitsonga"
+    },
+    "tt": {
+        "universal_name": "Tatar",
+        "direction": 1,
+        "native_name": "Tatarça"
+    },
+    "tw": {
+        "universal_name": "Twi",
+        "direction": 1,
+        "native_name": "Twi"
+    },
+    "ty": {
+        "universal_name": "Tahitian",
+        "direction": 1,
+        "native_name": "Reo Mā`ohi"
+    },
+    "ug": {
+        "universal_name": "Uyghur",
+        "direction": 1,
+        "native_name": "Uyƣurqə / ئۇيغۇرچە"
+    },
+    "uk": {
+        "universal_name": "Ukrainian",
+        "direction": 1,
+        "native_name": "Українська"
+    },
+    "ur": {
+        "universal_name": "Urdu",
+        "direction": 0,
+        "native_name": "اردو"
+    },
+    "uz": {
+        "universal_name": "Uzbek",
+        "direction": 1,
+        "native_name": "Ўзбек"
+    },
+    "ve": {
+        "universal_name": "Venda",
+        "direction": 1,
+        "native_name": "Tshivenḓa"
+    },
+    "vi": {
+        "universal_name": "Vietnamese",
+        "direction": 1,
+        "native_name": "Việtnam"
+    },
+    "vo": {
+        "universal_name": "Volapük",
+        "direction": 1,
+        "native_name": "Volapük"
+    },
+    "wa": {
+        "universal_name": "Walloon",
+        "direction": 1,
+        "native_name": "Walon"
+    },
+    "wo": {
+        "universal_name": "Wolof",
+        "direction": 1,
+        "native_name": "Wollof"
+    },
+    "xh": {
+        "universal_name": "Xhosa",
+        "direction": 1,
+        "native_name": "isiXhosa"
+    },
+    "yi": {
+        "universal_name": "Yiddish",
+        "direction": 0,
+        "native_name": "ייִדיש"
+    },
+    "yo": {
+        "universal_name": "Yoruba",
+        "direction": 1,
+        "native_name": "Yorùbá"
+    },
+    "za": {
+        "universal_name": "Zhuang",
+        "direction": 1,
+        "native_name": "Cuengh / Tôô / 壮语"
+    },
+    "zh": {
+        "universal_name": "Chinese",
+        "direction": 1,
+        "native_name": "中文"
+    },
+    "zu": {
+        "universal_name": "Zulu",
+        "direction": 1,
+        "native_name": "isiZulu"
+    },
+    "nb": {
+        "universal_name": "Norwegian Bokmål",
+        "direction": 1,
+        "native_name": "Norsk (bokmål)"
+    }
+}

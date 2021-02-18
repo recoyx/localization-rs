@@ -16,12 +16,15 @@ Notes:
 
 ## Getting started
 
+This example uses the [Tokio](https://tokio.rs) asynchronous runtime framework, solely for demonstrative purposes.
+
 Add the following dependencies to Cargo.toml:
 
 ```toml
 [dependencies]
 recoyx_localization = "0.1"
 maplit = "1.0"
+tokio = { version = "1", features = ["full"] }
 ```
 
 Example asset located at `path/to/res/lang/en/common.json`:
@@ -43,13 +46,14 @@ Example program using these assets:
 ```rust
 use recoyx_localization::{
     LocaleMap, LocaleMapOptions, LocaleMapAssetOptions,
-    LocaleMapLoaderType,
+    Gender, LocaleMapLoaderType,
     localization_vars,
 };
 use maplit::hashmap;
 
-fn main() {
-    let locale_map = LocaleMap::new(
+#[tokio::main]
+async fn main() {
+    let mut locale_map = LocaleMap::new(
         LocaleMapOptions::new()
             // Specify supported locale codes.
             // The form in which the locale code appears here

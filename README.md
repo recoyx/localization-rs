@@ -35,15 +35,15 @@ fn main() {
             // The form in which the locale code appears here
             // is a post-component for the assets "src" path. 
             // For example: "path/to/res/lang/en-US"
-            .supported_locales(vec![&"en", &"en-US", &"pt-BR"])
-            .default_locale(&"en-US")
+            .supported_locales(vec!["en", "en-US", "pt-BR"])
+            .default_locale("en-US")
             .fallbacks(hashmap! {
-                &"en-US" => vec![&"en"],
-                &"pt-BR" => vec![&"en-US"],
+                "en-US" => vec!["en"],
+                "pt-BR" => vec!["en-US"],
             })
             .assets(LocaleMapAssetOptions::new()
-                .src(&"path/to/res/lang")
-                .base_file_names(vec![&"common", &"validation"])
+                .src("path/to/res/lang")
+                .base_file_names(vec!["common", "validation"])
                 // "auto_clean" indicates whether to clean previous unused locale data. 
                 .auto_clean(true)
                 // Specify LocaleMapLoaderType::FileSystem or LocaleMapLoaderType::Http

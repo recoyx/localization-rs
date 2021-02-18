@@ -1,7 +1,47 @@
-use std::{cell::RefCell, collections::{HashMap, HashSet}, rc::Rc};
+use std::{any::Any, cell::RefCell, collections::{HashMap, HashSet}, rc::Rc};
 use std::cell::Cell;
 use super::*;
 use maplit::{hashmap, hashset};
+
+#[derive(Copy, Clone)]
+pub enum Gender {
+    Male,
+    Female,
+}
+
+#[macro_export(local_inner_macros)]
+/// Creates a `HashMap<String, String>` from a list of key-value pairs.
+/// This is based on the [`maplit`](https://github.com/bluss/maplit) crate.
+///
+/// ## Example
+///
+/// ```
+/// fn main() {
+///     let map = localization_vars!{
+///         "a" => "foo",
+///         "b" => "bar",
+///     };
+///     assert_eq!(map["a".to_string()], "foo");
+///     assert_eq!(map["b".to_string()], "bar");
+///     assert_eq!(map.get("c".to_string()), None);
+/// }
+/// ```
+macro_rules! localization_vars {
+    (@single $($x:tt)*) => (());
+    (@count $($rest:expr),*) => (<[()]>::len(&[$(localization_vars!(@single $rest)),*]));
+
+    ($($key:expr => $value:expr,)+) => { localization_vars!($($key => $value),+) };
+    ($($key:expr => $value:expr),*) => {
+        {
+            let _cap = localization_vars!(@count $($key),*);
+            let mut _map = ::std::collections::HashMap::<String, String>::with_capacity(_cap);
+            $(
+                let _ = _map.insert($key.to_string(), $value.to_string());
+            )*
+            _map
+        }
+    };
+}
 
 pub struct LocaleMap {
     _current_locale: Option<Locale>,
@@ -37,7 +77,7 @@ impl LocaleMap {
             _default_locale: parse_locale(&default_locale).unwrap(),
             _fallbacks: Rc::new(fallbacks),
             _assets: Rc::new(RefCell::new(HashMap::new())),
-            _assets_src: String::from(options._assets.borrow()._src.get()),
+            _assets_src: options._assets.borrow()._src.borrow().clone(),
             _assets_base_file_names: options._assets.borrow()._base_file_names.borrow().iter().map(|&s| String::from(s)).collect(),
             _assets_auto_clean: options._assets.borrow()._auto_clean.get(),
             _assets_loader_type: options._assets.borrow()._loader_type.get(),
@@ -138,6 +178,39 @@ impl LocaleMap {
             }
         }
     }
+
+    pub fn get(&self, string_id: &str) -> String {
+        self.get_formatted(string_id, vec![])
+    }
+
+    pub fn get_formatted(&self, string_id: &str, options: Vec<&dyn Any>) -> String {
+        let mut variables: Option<HashMap<String, String>> = None;
+        let mut gender: Option<Gender> = None;
+        let mut amount_u64: Option<u64> = None;
+        let mut amount_i64: Option<i64> = None;
+        let mut amount_f64: Option<f64> = None;
+
+        for option in options.iter() {
+            if let Some(r) = option.downcast_ref::<Gender>() {
+                gender = Some(*r);
+            }
+            else if let Some(r) = option.downcast_ref::<HashMap<String, String>>() {
+                variables = Some(r.iter().map(|(k, v)| (k.clone(), v.clone())).collect());
+            }
+            else if let Some(r) = option.downcast_ref::<i8>() { amount_i64 = Some(i64::from(*r)) }
+            else if let Some(r) = option.downcast_ref::<u8>() { amount_u64 = Some(u64::from(*r)) }
+            else if let Some(r) = option.downcast_ref::<i16>() { amount_i64 = Some(i64::from(*r)) }
+            else if let Some(r) = option.downcast_ref::<u16>() { amount_u64 = Some(u64::from(*r)) }
+            else if let Some(r) = option.downcast_ref::<i32>() { amount_i64 = Some(i64::from(*r)) }
+            else if let Some(r) = option.downcast_ref::<u32>() { amount_u64 = Some(u64::from(*r)) }
+            else if let Some(r) = option.downcast_ref::<i64>() { amount_i64 = Some(*r) }
+            else if let Some(r) = option.downcast_ref::<u64>() { amount_u64 = Some(*r) }
+            else if let Some(r) = option.downcast_ref::<f32>() { amount_f64 = Some(f64::from(*r)) }
+            else if let Some(r) = option.downcast_ref::<f64>() { amount_f64 = Some(*r) }
+        }
+
+        ""
+    }
 }
 
 impl Clone for LocaleMap {
@@ -158,36 +231,36 @@ impl Clone for LocaleMap {
 }
 
 pub struct LocaleMapOptions<'a> {
-    _default_locale: Cell<&'a str>,
+    _default_locale: RefCell<String>,
     _supported_locales: RefCell<Vec<&'a str>>,
     _fallbacks: RefCell<HashMap<&'a str, Vec<&'a str>>>,
-    _assets: RefCell<LocaleMapAssetOptions<'a>>,
+    _assets: RefCell<LocaleMapAssetOptions>,
 }
 
 impl<'a> LocaleMapOptions<'a> {
     pub fn new() -> Self {
         LocaleMapOptions {
-            _default_locale: Cell::new("en"),
-            _supported_locales: RefCell::new(vec!["en", "en-US"]),
+            _default_locale: RefCell::new("en".to_string()),
+            _supported_locales: RefCell::new(vec!["en".to_string(), "en-US".to_string()]),
             _fallbacks: RefCell::new(hashmap! {
-                "en-US" => vec!["en"]
+                "en-US".to_string() => vec!["en".to_string()]
             }),
             _assets: RefCell::new(LocaleMapAssetOptions::new()),
         }
     }
 
-    pub fn default_locale<S>(&self, value: &'a S) -> &Self where S: AsRef<str> {
-        self._default_locale.set(value.as_ref());
+    pub fn default_locale<S: ToString>(&self, value: S) -> &Self {
+        self._default_locale.replace(value.to_string());
         self
     }
 
-    pub fn supported_locales<S>(&self, list: Vec<&'a S>) -> &Self where S: AsRef<str> {
-        self._supported_locales.replace(list.iter().map(|&name| name.as_ref()).collect());
+    pub fn supported_locales<S: ToString>(&self, list: Vec<S>) -> &Self {
+        self._supported_locales.replace(list.iter().map(|&name| name.to_string()).collect());
         self
     }
 
-    pub fn fallbacks<S>(&self, map: HashMap<&'a S, Vec<&'a S>>) -> &Self where S: AsRef<str> {
-        self._fallbacks.replace(map.iter().map(|(&k, v)| (k.as_ref(), v.iter().map(|&s| s.as_ref()).collect())).collect());
+    pub fn fallbacks<S: ToString>(&self, map: HashMap<S, Vec<S>>) -> &Self {
+        self._fallbacks.replace(map.iter().map(|(&k, v)| (k.to_string(), v.iter().map(|&s| s.to_string()).collect())).collect());
         self
     }
 
@@ -197,14 +270,14 @@ impl<'a> LocaleMapOptions<'a> {
     }
 }
 
-pub struct LocaleMapAssetOptions<'a> {
-    _src: Cell<&'a str>,
-    _base_file_names: RefCell<Vec<&'a str>>,
+pub struct LocaleMapAssetOptions {
+    _src: RefCell<String>,
+    _base_file_names: RefCell<Vec<String>>,
     _auto_clean: Cell<bool>,
     _loader_type: Cell<LocaleMapLoaderType>,
 }
 
-impl<'a> Clone for LocaleMapAssetOptions<'a> {
+impl Clone for LocaleMapAssetOptions {
     fn clone(&self) -> Self {
         Self {
             _src: self._src.clone(),
@@ -215,23 +288,23 @@ impl<'a> Clone for LocaleMapAssetOptions<'a> {
     }
 }
 
-impl<'a> LocaleMapAssetOptions<'a> {
+impl LocaleMapAssetOptions {
     pub fn new() -> Self {
         LocaleMapAssetOptions {
-            _src: Cell::new("res/lang"),
+            _src: RefCell::new("res/lang".to_string()),
             _base_file_names: RefCell::new(vec![]),
             _auto_clean: Cell::new(true),
             _loader_type: Cell::new(LocaleMapLoaderType::Http),
         }
     }
     
-    pub fn src<S>(&self, src: &'a S) -> &Self where S: AsRef<str> {
-        self._src.set(src.as_ref());
+    pub fn src<S: ToString>(&self, src: S) -> &Self {
+        self._src.replace(src.to_string());
         self
     } 
 
-    pub fn base_file_names<S>(&self, list: Vec<&'a S>) -> &Self where S: AsRef<str> {
-        self._base_file_names.replace(list.iter().map(|&name| name.as_ref()).collect());
+    pub fn base_file_names<S: ToString>(&self, list: Vec<S>) -> &Self {
+        self._base_file_names.replace(list.iter().map(|&name| name.to_string()).collect());
         self
     }
 

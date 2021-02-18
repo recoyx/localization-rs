@@ -4,6 +4,8 @@ version = "0.1.0"
 authors = ["Klaider <HydroperHH@gmail.com>"]
 edition = "2018"
 repository = "https://github.com/recoyx/localization-rs"
+description = "All-in-one package for flexible localization."
+license = "Apache-2.0"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

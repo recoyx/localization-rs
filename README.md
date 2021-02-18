@@ -1,6 +1,6 @@
 # Localization
 
-Flexible localization for Rust.
+All-in-one package for flexible localization on Rust.
 
 Features:
 
@@ -9,6 +9,10 @@ Features:
 - General language code and country code manipulation.
   - `Locale` and `parse_locale(str)`
   - `Country` and `parse_country(str)`
+
+Notes:
+
+- Currently not all locale codes have a country associated. Shall the need of a lacking one arise, you can contribute to the file locale_country_data.json.
 
 ## Getting started
 

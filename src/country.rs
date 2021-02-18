@@ -22,7 +22,8 @@ impl Display for Country {
 }
 
 pub fn parse_country<S: ToString>(src: &S) -> Result<Country, isocountry::CountryCodeParseErr> {
-    let src: &str = src.to_string().as_ref();
+    let src = src.to_string();
+    let src: &str = src.as_ref();
     let r = if src.len() == 3 { isocountry::CountryCode::for_alpha3_caseless(src) } else { isocountry::CountryCode::for_alpha2_caseless(src) };
     if let Ok(r) = r { Ok(Country { _standard_code: r }) } else { Err(r.unwrap_err()) }
 }

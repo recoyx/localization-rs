@@ -1,7 +1,8 @@
-use std::{any::Any, cell::RefCell, collections::{HashMap, HashSet}, rc::Rc};
+use std::{any::Any, cell::RefCell, collections::{HashMap, HashSet}, rc::Rc, sync::Once};
 use std::cell::Cell;
 use super::*;
 use maplit::{hashmap, hashset};
+use regex::Regex;
 
 #[derive(Copy, Clone)]
 pub enum Gender {
@@ -9,7 +10,7 @@ pub enum Gender {
     Female,
 }
 
-#[macro_export(local_inner_macros)]
+#[macro_export]
 /// Creates a `HashMap<String, String>` from a list of key-value pairs.
 /// This is based on the [`maplit`](https://github.com/bluss/maplit) crate.
 ///
@@ -62,7 +63,7 @@ impl LocaleMap {
         let mut supported_locales = HashSet::<Locale>::new();
         for code in options._supported_locales.borrow().iter() {
             let locale_parse = parse_locale(code).unwrap();
-            locale_path_components.insert(locale_parse.clone(), String::from(*code));
+            locale_path_components.insert(locale_parse.clone(), code.clone());
             supported_locales.insert(locale_parse);
         }
         let mut fallbacks = HashMap::<Locale, Vec<Locale>>::new();
@@ -78,7 +79,7 @@ impl LocaleMap {
             _fallbacks: Rc::new(fallbacks),
             _assets: Rc::new(RefCell::new(HashMap::new())),
             _assets_src: options._assets.borrow()._src.borrow().clone(),
-            _assets_base_file_names: options._assets.borrow()._base_file_names.borrow().iter().map(|&s| String::from(s)).collect(),
+            _assets_base_file_names: options._assets.borrow()._base_file_names.borrow().iter().map(|s| s.clone()).collect(),
             _assets_auto_clean: options._assets.borrow()._auto_clean.get(),
             _assets_loader_type: options._assets.borrow()._loader_type.get(),
         }
@@ -222,39 +223,62 @@ impl LocaleMap {
         }
 
         if variables.is_none() { variables = Some(HashMap::new()); }
-        let variables = variables.unwrap();
+        let mut variables = variables.unwrap();
 
-        // id_empty, id_one, id_multiple and $amount variable
-        if let Some(qty) = amount_u64 { id.push_str( if qty == 0 { "_empty" } else if qty == 1 { "_one" } else { "_multiple" } ); variables.insert("amount".to_string(), qty.to_string()); }
-        if let Some(qty) = amount_i64 { id.push_str( if qty == 0 { "_empty" } else if qty == 1 { "_one" } else { "_multiple" } ); variables.insert("amount".to_string(), qty.to_string()); }
-        if let Some(qty) = amount_u128 { id.push_str( if qty == 0 { "_empty" } else if qty == 1 { "_one" } else { "_multiple" } ); variables.insert("amount".to_string(), qty.to_string()); }
-        if let Some(qty) = amount_i128 { id.push_str( if qty == 0 { "_empty" } else if qty == 1 { "_one" } else { "_multiple" } ); variables.insert("amount".to_string(), qty.to_string()); }
-        if let Some(qty) = amount_f64 { id.push_str( if qty == 0.0 { "_empty" } else if qty == 1.0 { "_one" } else { "_multiple" } ); variables.insert("amount".to_string(), qty.to_string()); }
+        // id_empty, id_one, id_multiple and $number variable
+        if let Some(qty) = amount_u64 { id.push_str( if qty == 0 { "_empty" } else if qty == 1 { "_one" } else { "_multiple" } ); variables.insert("number".to_string(), qty.to_string()); }
+        if let Some(qty) = amount_i64 { id.push_str( if qty == 0 { "_empty" } else if qty == 1 { "_one" } else { "_multiple" } ); variables.insert("number".to_string(), qty.to_string()); }
+        if let Some(qty) = amount_u128 { id.push_str( if qty == 0 { "_empty" } else if qty == 1 { "_one" } else { "_multiple" } ); variables.insert("number".to_string(), qty.to_string()); }
+        if let Some(qty) = amount_i128 { id.push_str( if qty == 0 { "_empty" } else if qty == 1 { "_one" } else { "_multiple" } ); variables.insert("number".to_string(), qty.to_string()); }
+        if let Some(qty) = amount_f64 { id.push_str( if qty == 0.0 { "_empty" } else if qty == 1.0 { "_one" } else { "_multiple" } ); variables.insert("number".to_string(), qty.to_string()); }
 
         let id: Vec<String> = id.split(".").map(|s| s.to_string()).collect();
         if self._current_locale.is_none() {
             return id.join(".");
         }
-        let r = self.get_formatted_with_locale(self._current_locale.unwrap(), &id, &variables);
+        let r = self.get_formatted_with_locale(self._current_locale.clone().unwrap(), &id, &variables);
         if let Some(r) = r { r } else { id.join(".") }
     }
 
     fn get_formatted_with_locale(&self, locale: Locale, id: &Vec<String>, vars: &HashMap<String, String>) -> Option<String> {
         let message = self.resolve_id(self._assets.borrow().get(&locale), id);
         if message.is_some() {
-            return self.apply_message(message, vars);
+            return Some(self.apply_message(message.unwrap(), vars));
         }
 
         let fallbacks = self._fallbacks.get(&locale);
         if fallbacks.is_some() {
             for fl in fallbacks.unwrap().iter() {
-                let r = self.get_formatted_with_locale(locale, id, vars);
+                let r = self.get_formatted_with_locale(fl.clone(), id, vars);
                 if r.is_some() {
                     return r;
                 }
             }
         }
         None
+    }
+
+    fn apply_message(&self, message: String, vars: &HashMap<String, String>) -> String {
+        static START: Once = Once::new();
+        static mut RE: Option<Regex> = None;
+        START.call_once(|| unsafe {
+            RE = Some(Regex::new(r"\$(\$|[A-Za-z0-9_-]+)").unwrap());
+        });
+        struct R<'a> {
+            _vars: &'a HashMap<String, String>,
+        }
+        impl<'a> regex::Replacer for R<'a> {
+            fn replace_append(&mut self, caps: &regex::Captures<'_>, dst: &mut String) {
+                let cap = caps.get(0).unwrap().as_str();
+                if cap == "$" {
+                    dst.push_str("$");
+                } else {
+                    let v = self._vars.get(&cap.to_string().replace("$", ""));
+                    dst.push_str(if let Some(v) = v { v } else { "undefined" });
+                }
+            }
+        }
+        (unsafe{ &RE }).clone().unwrap().replace_all(&message, R { _vars: vars }).as_ref().to_string()
     }
 
     fn resolve_id(&self, root: Option<&serde_json::Value>, id: &Vec<String>) -> Option<String> {
@@ -315,14 +339,14 @@ impl LocaleMapOptions {
     }
 
     pub fn supported_locales<S: ToString>(&self, list: Vec<S>) -> &Self {
-        self._supported_locales.replace(list.iter().map(|&name| name.to_string()).collect());
+        self._supported_locales.replace(list.iter().map(|name| name.to_string()).collect());
         self
     }
 
     pub fn fallbacks<S: ToString>(&self, map: HashMap<S, Vec<S>>) -> &Self {
-        self._fallbacks.replace(map.iter().map(|(&k, v)| (
+        self._fallbacks.replace(map.iter().map(|(k, v)| (
             k.to_string(),
-            v.iter().map(|&s| s.to_string()).collect()
+            v.iter().map(|s| s.to_string()).collect()
         )).collect());
         self
     }
@@ -367,7 +391,7 @@ impl LocaleMapAssetOptions {
     } 
 
     pub fn base_file_names<S: ToString>(&self, list: Vec<S>) -> &Self {
-        self._base_file_names.replace(list.iter().map(|&name| name.to_string()).collect());
+        self._base_file_names.replace(list.iter().map(|name| name.to_string()).collect());
         self
     }
 

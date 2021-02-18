@@ -3,7 +3,7 @@
     "parameterized": "Here: $x",
     "contextual_male": "Male message",
     "contextual_female": "Female message",
-    "qty_empty": "$amount: empty",
-    "qty_single": "$amount: single",
-    "qty_plural": "$amount: plural"
+    "qty_empty": "Empty ($number)",
+    "qty_one": "One ($number)",
+    "qty_multiple": "Multiple ($number)"
 }

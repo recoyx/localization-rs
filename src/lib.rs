@@ -16,6 +16,7 @@ mod locale_map;
 pub use locale_map::{
     LocaleMap, LocaleMapOptions, LocaleMapAssetOptions,
     LocaleMapLoaderType,
+    Gender,
 };
 
 #[cfg(test)]

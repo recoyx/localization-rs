@@ -32,7 +32,8 @@ fn country_codes() -> &'static HashMap<String, Country> {
 }
 
 pub fn parse_locale<S: ToString>(src: S) -> Result<Locale, String> {
-    let src: &str = src.to_string().as_ref();
+    let src = src.to_string();
+    let src: &str = src.as_ref();
     let tag = LangTag::from_str(src);
     if tag.is_err() {
         return Err(tag.unwrap_err());
@@ -85,7 +86,7 @@ impl Locale {
                 format!("{}{}", self._tag.get_language().to_string(), self._tag.get_region().unwrap().to_string())
             } else { self._tag.get_language().to_string() };
         let r = country_codes().get(&tagsrc);
-        if let Some(r) = r { Some(*r) } else { None }
+        if let Some(r) = r { Some(r.clone()) } else { None }
     }
 
     pub fn standard_tag(&self) -> &LangTag {

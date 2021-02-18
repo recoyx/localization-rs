@@ -4,8 +4,6 @@ use basic_language_info::{
 };
 pub use basic_language_info::Direction;
 
-pub use isocountry::CountryCode;
-
 mod locale;
 pub use locale::{Locale, parse_locale};
 

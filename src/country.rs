@@ -21,7 +21,7 @@ impl Display for Country {
     }
 }
 
-pub fn parse_country<S: ToString>(src: &S) -> Result<Country, isocountry::CountryCodeParseErr> {
+pub fn parse_country<S: ToString>(src: S) -> Result<Country, isocountry::CountryCodeParseErr> {
     let src = src.to_string();
     let src: &str = src.as_ref();
     let r = if src.len() == 3 { isocountry::CountryCode::for_alpha3_caseless(src) } else { isocountry::CountryCode::for_alpha2_caseless(src) };

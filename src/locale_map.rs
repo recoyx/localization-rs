@@ -217,8 +217,8 @@ impl LocaleMap {
         let mut id = id.to_string();
         if let Some(g) = gender {
             match g {
-                Gender::Male => { id.push_str("male"); },
-                Gender::Female => { id.push_str("female"); }
+                Gender::Male => { id.push_str("_male"); },
+                Gender::Female => { id.push_str("_female"); }
             }
         }
 

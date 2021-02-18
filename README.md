@@ -24,6 +24,7 @@ maplit = "1.0"
 use recoyx_localization::{
     LocaleMap, LocaleMapOptions, LocaleMapAssetOptions,
     LocaleMapLoaderType,
+    localization_vars,
 };
 use maplit::hashmap;
 
@@ -48,5 +49,15 @@ fn main() {
                 // Specify LocaleMapLoaderType::FileSystem or LocaleMapLoaderType::Http
                 .loader_type(LocaleMapLoaderType::FileSystem))
     ); // locale_map
+    locale_map.load(None).await;
+
+    println!("{}", locale_map.get("common.message_id"));
+    println!("{}", locale_map.get_formatted("common.parameterized", vec![ &localization_vars!{
+        "x" => "foo"
+    } ]));
+    println!("{}", locale_map.get_formatted("common.contextual", vec![ &Gender::Female ]));
+    for i in 0..3 {
+        println!("{}", locale_map.get_formatted("common.qty", vec![ &i ]));
+    }
 }
 ```

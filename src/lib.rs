@@ -10,7 +10,7 @@ mod locale;
 pub use locale::{Locale, parse_locale};
 
 mod country;
-pub use country::parse_country;
+pub use country::{Country, parse_country};
 
 mod locale_map;
 pub use locale_map::{

@@ -1,41 +1,38 @@
 use super::{
-    BasicLanguageInfo, Direction,
+    BasicLanguageInfo, Direction, Country,
     global_basic_locale_data,
 };
 use std::{borrow::Borrow, collections::HashMap, fmt::{Display, Formatter}, hash::{Hash, Hasher}, rc::Rc, str::FromStr, sync::Once};
 use language_tag::LangTag;
-use isocountry::{CountryCode};
 
 static START: Once = Once::new();
-static mut COUNTRY_CODES: Option<HashMap<String, CountryCode>> = None;
+static mut COUNTRY_CODES: Option<HashMap<String, Country>> = None;
 
 pub fn init_static_data() {
     START.call_once(|| unsafe {
         let locale_country_codes_0: HashMap<String, String> =
             serde_json::from_str(&String::from_utf8_lossy(include_bytes!("locale_country_data.json"))).unwrap();
-        let locale_country_codes_1: &mut HashMap<String, CountryCode> = &mut HashMap::new();
+        let locale_country_codes_1: &mut HashMap<String, Country> = &mut HashMap::new();
         for (locale_tag, country_code) in locale_country_codes_0 {
-            let country_code = CountryCode::for_alpha3(country_code.as_ref());
+            let country_code = isocountry::CountryCode::for_alpha3(country_code.as_ref());
             if country_code.is_err() {
                 continue;
             }
-            locale_country_codes_1.insert(locale_tag, country_code.unwrap());
+            locale_country_codes_1.insert(locale_tag, Country { _standard_code: country_code.unwrap() });
         }
         COUNTRY_CODES = Some(locale_country_codes_1.clone());
     });
 }
 
-fn country_codes() -> &'static HashMap<String, CountryCode> {
+fn country_codes() -> &'static HashMap<String, Country> {
     unsafe {
         init_static_data();
         COUNTRY_CODES.as_ref().unwrap().borrow()
     }
 }
 
-pub fn parse_locale<S>(src: &S) -> Result<Locale, String>
-    where S: AsRef<str>
-{
-    let src: &str = src.as_ref();
+pub fn parse_locale<S: ToString>(src: S) -> Result<Locale, String> {
+    let src: &str = src.to_string().as_ref();
     let tag = LangTag::from_str(src);
     if tag.is_err() {
         return Err(tag.unwrap_err());
@@ -82,7 +79,7 @@ impl Locale {
         if let Some(data) = data { &data.native_name } else { "" }
     }
 
-    pub fn country(&self) -> Option<CountryCode> {
+    pub fn country(&self) -> Option<Country> {
         let tagsrc =
             if self._tag.get_region().is_some() {
                 format!("{}{}", self._tag.get_language().to_string(), self._tag.get_region().unwrap().to_string())
@@ -100,7 +97,7 @@ impl Display for Locale {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         let country = self.country();
         if let Some(country) = country {
-            write!(f, "{} ({})", self.native_name(), country.name())
+            write!(f, "{} ({})", self.native_name(), country.universal_name())
         } else { write!(f, "{}", self.native_name()) }
     }
 }

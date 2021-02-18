@@ -9,7 +9,7 @@ fn locale_country() {
     assert_eq!(some_lang.to_string(), String::from("Português (Brazil)"));
     assert_eq!(some_lang.standard_tag().to_string(), String::from("pt-BR"));
     assert!(some_country.is_some());
-    assert_eq!(some_country.unwrap().alpha3(), "BRA");
+    assert_eq!(some_country.unwrap().standard_code().alpha3(), "BRA");
 }
 
 #[async_test]

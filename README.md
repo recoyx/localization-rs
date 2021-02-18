@@ -7,9 +7,8 @@ Features:
 - `LocaleMap`
   - Load assets from HTTP and File System.
 - General language code and country code manipulation.
-  - `Locale` and `parse_locale()`
-  - `CountryCode` from the crate `isocountry`
-  - `parse_country(str)`
+  - `Locale` and `parse_locale(str)`
+  - `Country` and `parse_country(str)`
 
 ## Getting started
 

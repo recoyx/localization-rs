@@ -57,7 +57,7 @@ pub struct LocaleMap {
 }
 
 impl LocaleMap {
-    pub fn new<'a>(options: &LocaleMapOptions<'a>) -> Self {
+    pub fn new(options: &LocaleMapOptions) -> Self {
         let mut locale_path_components = HashMap::<Locale, String>::new();
         let mut supported_locales = HashSet::<Locale>::new();
         for code in options._supported_locales.borrow().iter() {
@@ -69,7 +69,7 @@ impl LocaleMap {
         for (k, v) in options._fallbacks.borrow().iter() {
             fallbacks.insert(parse_locale(k).unwrap(), v.iter().map(|s| parse_locale(s).unwrap()).collect());
         }
-        let default_locale = String::from(options._default_locale.get());
+        let default_locale = options._default_locale.borrow().clone();
         Self {
             _current_locale: None,
             _locale_path_components: Rc::new(locale_path_components),
@@ -179,15 +179,17 @@ impl LocaleMap {
         }
     }
 
-    pub fn get(&self, string_id: &str) -> String {
-        self.get_formatted(string_id, vec![])
+    pub fn get<S: ToString>(&self, id: S) -> String {
+        self.get_formatted(id, vec![])
     }
 
-    pub fn get_formatted(&self, string_id: &str, options: Vec<&dyn Any>) -> String {
+    pub fn get_formatted<S: ToString>(&self, id: S, options: Vec<&dyn Any>) -> String {
         let mut variables: Option<HashMap<String, String>> = None;
         let mut gender: Option<Gender> = None;
         let mut amount_u64: Option<u64> = None;
         let mut amount_i64: Option<i64> = None;
+        let mut amount_u128: Option<u128> = None;
+        let mut amount_i128: Option<i128> = None;
         let mut amount_f64: Option<f64> = None;
 
         for option in options.iter() {
@@ -205,11 +207,69 @@ impl LocaleMap {
             else if let Some(r) = option.downcast_ref::<u32>() { amount_u64 = Some(u64::from(*r)) }
             else if let Some(r) = option.downcast_ref::<i64>() { amount_i64 = Some(*r) }
             else if let Some(r) = option.downcast_ref::<u64>() { amount_u64 = Some(*r) }
+            else if let Some(r) = option.downcast_ref::<i128>() { amount_i128 = Some(*r) }
+            else if let Some(r) = option.downcast_ref::<u128>() { amount_u128 = Some(*r) }
             else if let Some(r) = option.downcast_ref::<f32>() { amount_f64 = Some(f64::from(*r)) }
             else if let Some(r) = option.downcast_ref::<f64>() { amount_f64 = Some(*r) }
         }
 
-        ""
+        let mut id = id.to_string();
+        if let Some(g) = gender {
+            match g {
+                Gender::Male => { id.push_str("male"); },
+                Gender::Female => { id.push_str("female"); }
+            }
+        }
+
+        if variables.is_none() { variables = Some(HashMap::new()); }
+        let variables = variables.unwrap();
+
+        // id_empty, id_one, id_multiple and $amount variable
+        if let Some(qty) = amount_u64 { id.push_str( if qty == 0 { "_empty" } else if qty == 1 { "_one" } else { "_multiple" } ); variables.insert("amount".to_string(), qty.to_string()); }
+        if let Some(qty) = amount_i64 { id.push_str( if qty == 0 { "_empty" } else if qty == 1 { "_one" } else { "_multiple" } ); variables.insert("amount".to_string(), qty.to_string()); }
+        if let Some(qty) = amount_u128 { id.push_str( if qty == 0 { "_empty" } else if qty == 1 { "_one" } else { "_multiple" } ); variables.insert("amount".to_string(), qty.to_string()); }
+        if let Some(qty) = amount_i128 { id.push_str( if qty == 0 { "_empty" } else if qty == 1 { "_one" } else { "_multiple" } ); variables.insert("amount".to_string(), qty.to_string()); }
+        if let Some(qty) = amount_f64 { id.push_str( if qty == 0.0 { "_empty" } else if qty == 1.0 { "_one" } else { "_multiple" } ); variables.insert("amount".to_string(), qty.to_string()); }
+
+        let id: Vec<String> = id.split(".").map(|s| s.to_string()).collect();
+        if self._current_locale.is_none() {
+            return id.join(".");
+        }
+        let r = self.get_formatted_with_locale(self._current_locale.unwrap(), &id, &variables);
+        if let Some(r) = r { r } else { id.join(".") }
+    }
+
+    fn get_formatted_with_locale(&self, locale: Locale, id: &Vec<String>, vars: &HashMap<String, String>) -> Option<String> {
+        let message = self.resolve_id(self._assets.borrow().get(&locale), id);
+        if message.is_some() {
+            return self.apply_message(message, vars);
+        }
+
+        let fallbacks = self._fallbacks.get(&locale);
+        if fallbacks.is_some() {
+            for fl in fallbacks.unwrap().iter() {
+                let r = self.get_formatted_with_locale(locale, id, vars);
+                if r.is_some() {
+                    return r;
+                }
+            }
+        }
+        None
+    }
+
+    fn resolve_id(&self, root: Option<&serde_json::Value>, id: &Vec<String>) -> Option<String> {
+        let mut r = root;
+        for frag in id.iter() {
+            if r.is_none() {
+                return None;
+            }
+            r = r.unwrap().get(frag);
+        }
+        if r.is_none() {
+            return None;
+        }
+        let r = r.unwrap().as_str();
+        if let Some(r) = r { Some(r.to_string()) } else { None }
     }
 }
 
@@ -230,14 +290,14 @@ impl Clone for LocaleMap {
     }
 }
 
-pub struct LocaleMapOptions<'a> {
+pub struct LocaleMapOptions {
     _default_locale: RefCell<String>,
-    _supported_locales: RefCell<Vec<&'a str>>,
-    _fallbacks: RefCell<HashMap<&'a str, Vec<&'a str>>>,
+    _supported_locales: RefCell<Vec<String>>,
+    _fallbacks: RefCell<HashMap<String, Vec<String>>>,
     _assets: RefCell<LocaleMapAssetOptions>,
 }
 
-impl<'a> LocaleMapOptions<'a> {
+impl LocaleMapOptions {
     pub fn new() -> Self {
         LocaleMapOptions {
             _default_locale: RefCell::new("en".to_string()),
@@ -260,11 +320,14 @@ impl<'a> LocaleMapOptions<'a> {
     }
 
     pub fn fallbacks<S: ToString>(&self, map: HashMap<S, Vec<S>>) -> &Self {
-        self._fallbacks.replace(map.iter().map(|(&k, v)| (k.to_string(), v.iter().map(|&s| s.to_string()).collect())).collect());
+        self._fallbacks.replace(map.iter().map(|(&k, v)| (
+            k.to_string(),
+            v.iter().map(|&s| s.to_string()).collect()
+        )).collect());
         self
     }
 
-    pub fn assets(&self, options: &LocaleMapAssetOptions<'a>) -> &Self {
+    pub fn assets(&self, options: &LocaleMapAssetOptions) -> &Self {
         self._assets.replace(options.clone());
         self
     }

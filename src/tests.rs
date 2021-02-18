@@ -1,5 +1,6 @@
 use super::*;
 use maplit::*;
+use futures_await_test::async_test;
 
 #[test]
 fn locale_country() {
@@ -11,26 +12,28 @@ fn locale_country() {
     assert_eq!(some_country.unwrap().alpha3(), "BRA");
 }
 
-#[test]
-fn locale_map() {
-    let locale_map = LocaleMap::new(
+#[async_test]
+async fn locale_map() {
+    let mut locale_map = LocaleMap::new(
         LocaleMapOptions::new()
             // Specify supported locale codes.
             // The form in which the locale code appears here
             // is a post-component for the assets "src" path. 
             // For example: "path/to/res/lang/en-US"
-            .supported_locales(vec!["en", "en-US", "pt-BR"])
-            .default_locale("en-US")
+            .supported_locales(vec![&"en", &"en-US", &"pt-BR"])
+            .default_locale(&"en-US")
             .fallbacks(hashmap! {
-                "en-US" => vec!["en"],
-                "pt-BR" => vec!["en-US"],
+                &"en-US" => vec![&"en"],
+                &"pt-BR" => vec![&"en-US"],
             })
             .assets(LocaleMapAssetOptions::new()
-                .src("path/to/res/lang")
-                .base_file_names(vec!["common", "validation"])
+                .src(&"src/test_res")
+                .base_file_names(vec![&"common", &"validation"])
                 // "auto_clean" indicates whether to clean previous unused locale data. 
                 .auto_clean(true)
                 // Specify LocaleMapLoaderType::FileSystem or LocaleMapLoaderType::Http
                 .loader_type(LocaleMapLoaderType::FileSystem))
     ); // locale_map
+    assert!(locale_map.supports_locale(&parse_locale(&"en-US").unwrap()));
+    locale_map.load(None).await;
 }

@@ -91,7 +91,7 @@ impl LocaleMap {
         match self._assets_loader_type {
             LocaleMapLoaderType::FileSystem => {
                 for base_name in self._assets_base_file_names.iter() {
-                    let res_path = format!("{}/{}/{}.json", self._assets_src, self._locale_path_components.get(locale), base_name);
+                    let res_path = format!("{}/{}/{}.json", self._assets_src, self._locale_path_components.get(locale).unwrap(), base_name);
                     let content = std::fs::read(res_path.clone());
                     if content.is_err() {
                         println!("Failed to load resource at {}.", res_path);
@@ -102,7 +102,7 @@ impl LocaleMap {
             },
             LocaleMapLoaderType::Http => {
                 for base_name in self._assets_base_file_names.iter() {
-                    let res_path = format!("{}/{}/{}.json", self._assets_src, self._locale_path_components.get(locale), base_name);
+                    let res_path = format!("{}/{}/{}.json", self._assets_src, self._locale_path_components.get(locale).unwrap(), base_name);
                     let content = reqwest::get(reqwest::Url::parse(res_path.clone().as_ref()).unwrap()).await;
                     if content.is_err() {
                         println!("Failed to load resource at {}.", res_path);
@@ -191,7 +191,7 @@ impl<'a> LocaleMapOptions<'a> {
         self
     }
 
-    pub fn assets<S>(&self, options: LocaleMapAssetOptions<'a>) -> &Self {
+    pub fn assets(&self, options: &LocaleMapAssetOptions<'a>) -> &Self {
         self._assets.replace(options.clone());
         self
     }

@@ -20,6 +20,22 @@ recoyx_localization = "0.1"
 maplit = "1.0"
 ```
 
+Example asset located at `path/to/res/lang/en/common.json`:
+
+```json
+{
+    "message_id": "Some message",
+    "parameterized": "Here: $x",
+    "contextual_male": "Male message",
+    "contextual_female": "Female message",
+    "qty_empty": "Empty ($number)",
+    "qty_one": "One ($number)",
+    "qty_multiple": "Multiple ($number)"
+}
+```
+
+Example program using these assets:
+
 ```rust
 use recoyx_localization::{
     LocaleMap, LocaleMapOptions, LocaleMapAssetOptions,

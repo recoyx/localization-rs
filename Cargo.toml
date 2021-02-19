@@ -20,4 +20,6 @@ maplit = "1.0.2"
 regex = "1.4.3"
 reqwest = { version = "0.11", features = ["json"] }
 tokio = { version = "1", features = ["full"] }
+
+[dev-dependencies]
 futures-await-test = "0.3.0"

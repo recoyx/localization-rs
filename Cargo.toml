@@ -1,6 +1,6 @@
 [package]
 name = "recoyx_localization"
-version = "0.2.0"
+version = "0.2.1"
 authors = ["Klaider <HydroperHH@gmail.com>"]
 edition = "2018"
 repository = "https://github.com/recoyx/localization-rs"

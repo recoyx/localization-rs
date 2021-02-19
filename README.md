@@ -22,7 +22,7 @@ Add the following dependencies to Cargo.toml:
 
 ```toml
 [dependencies]
-recoyx_localization = "0.2"
+recoyx_localization = "1"
 maplit = "1.0"
 tokio = { version = "1", features = ["full"] }
 ```

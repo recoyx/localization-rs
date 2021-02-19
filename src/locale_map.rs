@@ -97,11 +97,13 @@ impl LocaleMap {
         self._current_locale.clone()
     }
 
-    pub async fn update_locale(&mut self, new_locale: Locale) {
-        self.load(Some(new_locale)).await;
+    /// Equivalent to `load()` method.
+    pub async fn update_locale(&mut self, new_locale: Locale) -> bool {
+        self.load(Some(new_locale)).await
     }
 
-    pub async fn load(&mut self, mut new_locale: Option<Locale>) {
+    /// Attempts to load specified, current or default locale.
+    pub async fn load(&mut self, mut new_locale: Option<Locale>) -> bool {
         if new_locale.is_none() { new_locale = self.current_locale(); }
         if new_locale.is_none() { new_locale = Some(self._default_locale.clone()); }
         let new_locale = new_locale.unwrap();
@@ -113,7 +115,11 @@ impl LocaleMap {
 
         let mut new_assets: HashMap<Locale, serde_json::Value> = hashmap![];
         for locale in to_load {
-            new_assets.insert(locale.clone(), self.load_single_locale(&locale).await);
+            let res = self.load_single_locale(&locale).await;
+            if res.is_none() {
+                return false;
+            }
+            new_assets.insert(locale.clone(), res.unwrap());
         }
 
         if self._assets_auto_clean {
@@ -125,9 +131,10 @@ impl LocaleMap {
             assets_output.insert(locale, root);
         }
         self._current_locale = Some(new_locale);
+        true
     }
 
-    async fn load_single_locale(&self, locale: &Locale) -> serde_json::Value {
+    async fn load_single_locale(&self, locale: &Locale) -> Option<serde_json::Value> {
         let mut r = serde_json::Value::Object(serde_json::Map::new());
         match self._assets_loader_type {
             LocaleMapLoaderType::FileSystem => {
@@ -136,7 +143,7 @@ impl LocaleMap {
                     let content = std::fs::read(res_path.clone());
                     if content.is_err() {
                         println!("Failed to load resource at {}.", res_path);
-                        continue;
+                        return None;
                     }
                     LocaleMap::apply_deep(base_name, serde_json::from_str(String::from_utf8(content.unwrap()).unwrap().as_ref()).unwrap(), &mut r);
                 }
@@ -147,14 +154,14 @@ impl LocaleMap {
                     let content = reqwest::get(reqwest::Url::parse(res_path.clone().as_ref()).unwrap()).await;
                     if content.is_err() {
                         println!("Failed to load resource at {}.", res_path);
-                        continue;
+                        return None;
                     }
                     let content = if content.is_ok() { Some(content.unwrap().text().await) } else { None };
                     LocaleMap::apply_deep(base_name, serde_json::from_str(content.unwrap().unwrap().as_ref()).unwrap(), &mut r);
                 }
             },
         }
-        r
+        Some(r)
     }
 
     fn apply_deep(name: &String, assign: serde_json::Value, mut output: &mut serde_json::Value) {

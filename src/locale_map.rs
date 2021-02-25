@@ -360,6 +360,10 @@ impl LocaleMapFormatArgument for u128 {
     fn as_u128(&self) -> Option<u128> { Some(*self) }
 }
 
+impl LocaleMapFormatArgument for HashMap<String, String> {
+    fn as_string_map(&self) -> Option<HashMap<String, String>> { Some(self.clone()) }
+}
+
 pub struct LocaleMapOptions {
     _default_locale: RefCell<String>,
     _supported_locales: RefCell<Vec<String>>,

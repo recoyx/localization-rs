@@ -16,3 +16,4 @@ pub use locale_map::{
     LocaleMapLoaderType, LocaleMapFormatArgument,
     Gender,
 };
+pub use intl_pluralrules::{PluralCategory, PluralRuleType};

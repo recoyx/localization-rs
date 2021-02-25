@@ -1,4 +1,4 @@
-use std::{cell::RefCell, collections::{HashMap, HashSet}, rc::Rc, sync::Once};
+use std::{cell::RefCell, collections::{HashMap, HashSet}, convert::TryInto, rc::Rc, sync::Once};
 use std::cell::Cell;
 use super::*;
 use maplit::{hashmap, hashset};
@@ -46,6 +46,8 @@ macro_rules! localization_vars {
 
 pub struct LocaleMap {
     _current_locale: Option<Locale>,
+    _current_ordinal_plural_rules: Option<intl_pluralrules::PluralRules>,
+    _current_cardinal_plural_rules: Option<intl_pluralrules::PluralRules>,
     _locale_path_components: Rc<HashMap<Locale, String>>,
     _supported_locales: Rc<HashSet<Locale>>,
     _default_locale: Locale,
@@ -73,6 +75,8 @@ impl LocaleMap {
         let default_locale = options._default_locale.borrow().clone();
         Self {
             _current_locale: None,
+            _current_cardinal_plural_rules: None,
+            _current_ordinal_plural_rules: None,
             _locale_path_components: Rc::new(locale_path_components),
             _supported_locales: Rc::new(supported_locales),
             _default_locale: parse_locale(&default_locale).unwrap(),
@@ -130,8 +134,23 @@ impl LocaleMap {
         for (locale, root) in new_assets {
             assets_output.insert(locale, root);
         }
-        self._current_locale = Some(new_locale);
+        self._current_locale = Some(new_locale.clone());
+        let new_locale_code = unic_langid::LanguageIdentifier::from_bytes(new_locale.clone().standard_tag().to_string().as_ref()).unwrap();
+        self._current_ordinal_plural_rules = self.load_plural_rules(new_locale_code.clone(), intl_pluralrules::PluralRuleType::ORDINAL);
+        self._current_cardinal_plural_rules = self.load_plural_rules(new_locale_code, intl_pluralrules::PluralRuleType::CARDINAL);
         true
+    }
+
+    fn load_plural_rules(&self, new_locale_code: unic_langid::LanguageIdentifier, prt: intl_pluralrules::PluralRuleType) -> Option<intl_pluralrules::PluralRules> {
+        if let Ok(pr) = intl_pluralrules::PluralRules::create(new_locale_code.clone(), prt) {
+            Some(pr)
+        }
+        else if let Ok(pr) = intl_pluralrules::PluralRules::create(unic_langid::LanguageIdentifier::from_parts(new_locale_code.language, None, None, &[]), prt) {
+            Some(pr)
+        }
+        else {
+            Some(intl_pluralrules::PluralRules::create(unic_langid::LanguageIdentifier::from_parts(unic_langid::subtags::Language::from_bytes(&"en".as_ref()).unwrap(), None, None, &[]), prt).unwrap())
+        }
     }
 
     async fn load_single_locale(&self, locale: &Locale) -> Option<serde_json::Value> {
@@ -187,10 +206,12 @@ impl LocaleMap {
         }
     }
 
+    /// Retrieves message by identifier.
     pub fn get<S: ToString>(&self, id: S) -> String {
         self.get_formatted(id, vec![])
     }
 
+    /// Retrieves message by identifier with formatting arguments.
     pub fn get_formatted<S: ToString>(&self, id: S, options: Vec<&dyn LocaleMapFormatArgument>) -> String {
         let mut variables: Option<HashMap<String, String>> = None;
         let mut gender: Option<Gender> = None;
@@ -227,10 +248,10 @@ impl LocaleMap {
 
         // id_empty, id_one, id_multiple and $number variable
         if let Some(qty) = amount_u64 { id.push_str( if qty == 0 { "_empty" } else if qty == 1 { "_one" } else { "_multiple" } ); variables.insert("number".to_string(), qty.to_string()); }
-        if let Some(qty) = amount_i64 { id.push_str( if qty == 0 { "_empty" } else if qty == 1 { "_one" } else { "_multiple" } ); variables.insert("number".to_string(), qty.to_string()); }
-        if let Some(qty) = amount_u128 { id.push_str( if qty == 0 { "_empty" } else if qty == 1 { "_one" } else { "_multiple" } ); variables.insert("number".to_string(), qty.to_string()); }
-        if let Some(qty) = amount_i128 { id.push_str( if qty == 0 { "_empty" } else if qty == 1 { "_one" } else { "_multiple" } ); variables.insert("number".to_string(), qty.to_string()); }
-        if let Some(qty) = amount_f64 { id.push_str( if qty == 0.0 { "_empty" } else if qty == 1.0 { "_one" } else { "_multiple" } ); variables.insert("number".to_string(), qty.to_string()); }
+        else if let Some(qty) = amount_i64 { id.push_str( if qty == 0 { "_empty" } else if qty == 1 { "_one" } else { "_multiple" } ); variables.insert("number".to_string(), qty.to_string()); }
+        else if let Some(qty) = amount_u128 { id.push_str( if qty == 0 { "_empty" } else if qty == 1 { "_one" } else { "_multiple" } ); variables.insert("number".to_string(), qty.to_string()); }
+        else if let Some(qty) = amount_i128 { id.push_str( if qty == 0 { "_empty" } else if qty == 1 { "_one" } else { "_multiple" } ); variables.insert("number".to_string(), qty.to_string()); }
+        else if let Some(qty) = amount_f64 { id.push_str( if qty == 0.0 { "_empty" } else if qty == 1.0 { "_one" } else { "_multiple" } ); variables.insert("number".to_string(), qty.to_string()); }
 
         let id: Vec<String> = id.split(".").map(|s| s.to_string()).collect();
         if self._current_locale.is_none() {
@@ -295,12 +316,33 @@ impl LocaleMap {
         let r = r.unwrap().as_str();
         if let Some(r) = r { Some(r.to_string()) } else { None }
     }
+
+    pub fn select_plural_rule<N: TryInto<intl_pluralrules::operands::PluralOperands>>(&self, prt: intl_pluralrules::PluralRuleType, number: N) -> Result<intl_pluralrules::PluralCategory, &'static str> {
+        if prt == intl_pluralrules::PluralRuleType::ORDINAL {
+            if let Some(pr) = self._current_ordinal_plural_rules.clone() {
+                pr.select::<N>(number)
+            }
+            else {
+                Err(&"Plural rules missing.")
+            }
+        }
+        else {
+            if let Some(pr) = self._current_cardinal_plural_rules.clone() {
+                pr.select::<N>(number)
+            }
+            else {
+                Err(&"Plural rules missing.")
+            }
+        }
+    }
 }
 
 impl Clone for LocaleMap {
     fn clone(&self) -> Self {
         Self {
             _current_locale: self._current_locale.clone(),
+            _current_cardinal_plural_rules: self._current_cardinal_plural_rules.clone(),
+            _current_ordinal_plural_rules: self._current_ordinal_plural_rules.clone(),
             _locale_path_components: self._locale_path_components.clone(),
             _supported_locales: self._supported_locales.clone(),
             _default_locale: self._default_locale.clone(),

@@ -1,6 +1,6 @@
 mod basic_language_info;
 use basic_language_info::{
-    global_basic_locale_data, BasicLanguageInfo,
+    basic_locale_data, BasicLanguageInfo,
 };
 pub use basic_language_info::Direction;
 
@@ -13,9 +13,6 @@ pub use country::{Country, parse_country};
 mod locale_map;
 pub use locale_map::{
     LocaleMap, LocaleMapOptions, LocaleMapAssetOptions,
-    LocaleMapLoaderType,
+    LocaleMapLoaderType, LocaleMapFormatArgument,
     Gender,
 };
-
-#[cfg(test)]
-mod tests;

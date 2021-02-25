@@ -1,4 +1,4 @@
-use super::*;
+use recoyx_localization::*;
 use maplit::*;
 use futures_await_test::async_test;
 
@@ -27,12 +27,13 @@ async fn locale_map() {
                 "pt-BR" => vec!["en-US"],
             })
             .assets(LocaleMapAssetOptions::new()
-                .src("src/test_res")
+                .src("tests/res")
                 .base_file_names(vec!["common"])
                 // "auto_clean" indicates whether to clean previous unused locale data. 
                 .auto_clean(true)
                 // Specify LocaleMapLoaderType::FileSystem or LocaleMapLoaderType::Http
                 .loader_type(LocaleMapLoaderType::FileSystem))
     ); // locale_map
+    locale_map.load(None).await;
     assert!(locale_map.supports_locale(&parse_locale("en-US").unwrap()));
 }

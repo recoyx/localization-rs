@@ -1,6 +1,6 @@
 use super::{
     BasicLanguageInfo, Direction, Country,
-    global_basic_locale_data,
+    basic_locale_data,
 };
 use std::{borrow::Borrow, collections::HashMap, fmt::{Display, Formatter}, hash::{Hash, Hasher}, rc::Rc, str::FromStr, sync::Once};
 use language_tag::LangTag;
@@ -45,7 +45,7 @@ pub fn parse_locale<S: ToString>(src: S) -> Result<Locale, String> {
         if src == "us" { tag = LangTag::from_str("en_US").unwrap(); }
         if src == "jp" { tag = LangTag::from_str("ja_JP").unwrap(); }
     }
-    if global_basic_locale_data().get(&tag.get_language().to_string().replace("-", "")).is_none() {
+    if basic_locale_data().get(&tag.get_language().to_string().replace("-", "")).is_none() {
         return Err(String::from("Invalid locale code."));
     }
     Ok(Locale {
@@ -62,7 +62,7 @@ impl Locale {
     fn _get_basic_info(&self) -> Option<&BasicLanguageInfo> {
         let langscript = self._tag.get_language().to_string().replace("-", "");
         let langscript: &str = langscript.as_ref();
-        global_basic_locale_data().get(langscript)
+        basic_locale_data().get(langscript)
     }
 
     pub fn direction(&self) -> Direction {

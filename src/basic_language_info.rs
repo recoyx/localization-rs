@@ -13,7 +13,7 @@ pub fn init_static_data() {
     });
 }
 
-pub fn global_basic_locale_data() -> &'static HashMap<String, BasicLanguageInfo> {
+pub fn basic_locale_data() -> &'static HashMap<String, BasicLanguageInfo> {
     unsafe {
         init_static_data();
         GLOBAL_DATA.as_ref().unwrap().borrow()

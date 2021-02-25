@@ -1,4 +1,4 @@
-use std::{any::Any, cell::RefCell, collections::{HashMap, HashSet}, rc::Rc, sync::Once};
+use std::{cell::RefCell, collections::{HashMap, HashSet}, rc::Rc, sync::Once};
 use std::cell::Cell;
 use super::*;
 use maplit::{hashmap, hashset};
@@ -191,7 +191,7 @@ impl LocaleMap {
         self.get_formatted(id, vec![])
     }
 
-    pub fn get_formatted<S: ToString>(&self, id: S, options: Vec<&dyn Any>) -> String {
+    pub fn get_formatted<S: ToString>(&self, id: S, options: Vec<&dyn LocaleMapFormatArgument>) -> String {
         let mut variables: Option<HashMap<String, String>> = None;
         let mut gender: Option<Gender> = None;
         let mut amount_u64: Option<u64> = None;
@@ -201,24 +201,17 @@ impl LocaleMap {
         let mut amount_f64: Option<f64> = None;
 
         for option in options.iter() {
-            if let Some(r) = option.downcast_ref::<Gender>() {
-                gender = Some(*r);
+            if let Some(r) = option.as_gender() {
+                gender = Some(r);
             }
-            else if let Some(r) = option.downcast_ref::<HashMap<String, String>>() {
+            else if let Some(r) = option.as_string_map() {
                 variables = Some(r.iter().map(|(k, v)| (k.clone(), v.clone())).collect());
             }
-            else if let Some(r) = option.downcast_ref::<i8>() { amount_i64 = Some(i64::from(*r)) }
-            else if let Some(r) = option.downcast_ref::<u8>() { amount_u64 = Some(u64::from(*r)) }
-            else if let Some(r) = option.downcast_ref::<i16>() { amount_i64 = Some(i64::from(*r)) }
-            else if let Some(r) = option.downcast_ref::<u16>() { amount_u64 = Some(u64::from(*r)) }
-            else if let Some(r) = option.downcast_ref::<i32>() { amount_i64 = Some(i64::from(*r)) }
-            else if let Some(r) = option.downcast_ref::<u32>() { amount_u64 = Some(u64::from(*r)) }
-            else if let Some(r) = option.downcast_ref::<i64>() { amount_i64 = Some(*r) }
-            else if let Some(r) = option.downcast_ref::<u64>() { amount_u64 = Some(*r) }
-            else if let Some(r) = option.downcast_ref::<i128>() { amount_i128 = Some(*r) }
-            else if let Some(r) = option.downcast_ref::<u128>() { amount_u128 = Some(*r) }
-            else if let Some(r) = option.downcast_ref::<f32>() { amount_f64 = Some(f64::from(*r)) }
-            else if let Some(r) = option.downcast_ref::<f64>() { amount_f64 = Some(*r) }
+            else if let Some(r) = option.as_i64() { amount_i64 = Some(r) }
+            else if let Some(r) = option.as_u64() { amount_u64 = Some(r) }
+            else if let Some(r) = option.as_i128() { amount_i128 = Some(r) }
+            else if let Some(r) = option.as_u128() { amount_u128 = Some(r) }
+            else if let Some(r) = option.as_f64() { amount_f64 = Some(r) }
         }
 
         let mut id = id.to_string();
@@ -319,6 +312,52 @@ impl Clone for LocaleMap {
             _assets_loader_type: self._assets_loader_type,
         }
     }
+}
+
+pub trait LocaleMapFormatArgument {
+    fn as_gender(&self) -> Option<Gender> { None }
+    fn as_f64(&self) -> Option<f64> { None }
+    fn as_i64(&self) -> Option<i64> { None }
+    fn as_u64(&self) -> Option<u64> { None }
+    fn as_i128(&self) -> Option<i128> { None }
+    fn as_u128(&self) -> Option<u128> { None }
+    fn as_string_map(&self) -> Option<HashMap<String, String>> { None }
+}
+
+impl LocaleMapFormatArgument for Gender {
+    fn as_gender(&self) -> Option<Gender> { Some(*self) }
+}
+
+impl LocaleMapFormatArgument for f32 {
+    fn as_f64(&self) -> Option<f64> { Some(f64::from(*self)) }
+}
+
+impl LocaleMapFormatArgument for f64 {
+    fn as_f64(&self) -> Option<f64> { Some(*self) }
+}
+
+impl LocaleMapFormatArgument for i32 {
+    fn as_i64(&self) -> Option<i64> { Some(i64::from(*self)) }
+}
+
+impl LocaleMapFormatArgument for u32 {
+    fn as_u64(&self) -> Option<u64> { Some(u64::from(*self)) }
+}
+
+impl LocaleMapFormatArgument for i64 {
+    fn as_i64(&self) -> Option<i64> { Some(*self) }
+}
+
+impl LocaleMapFormatArgument for u64 {
+    fn as_u64(&self) -> Option<u64> { Some(*self) }
+}
+
+impl LocaleMapFormatArgument for i128 {
+    fn as_i128(&self) -> Option<i128> { Some(*self) }
+}
+
+impl LocaleMapFormatArgument for u128 {
+    fn as_u128(&self) -> Option<u128> { Some(*self) }
 }
 
 pub struct LocaleMapOptions {

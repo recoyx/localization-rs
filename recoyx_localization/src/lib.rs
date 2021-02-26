@@ -1,8 +1,8 @@
-mod basic_language_info;
-use basic_language_info::{
-    basic_locale_data, BasicLanguageInfo,
+mod locale_basic_data;
+use locale_basic_data::{
+    get_locale_basic_data, LocaleBasicData,
 };
-pub use basic_language_info::Direction;
+pub use locale_basic_data::Direction;
 
 mod locale;
 pub use locale::{Locale, parse_locale};

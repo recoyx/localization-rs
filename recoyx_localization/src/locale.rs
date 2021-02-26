@@ -1,6 +1,6 @@
 use super::{
-    BasicLanguageInfo, Direction, Country,
-    basic_locale_data,
+    LocaleBasicData, Direction, Country,
+    get_locale_basic_data,
 };
 use std::{borrow::Borrow, collections::HashMap, fmt::{Display, Formatter}, hash::{Hash, Hasher}, rc::Rc, str::FromStr, sync::Once};
 use language_tag::LangTag;
@@ -11,7 +11,7 @@ static mut COUNTRY_CODES: Option<HashMap<String, Country>> = None;
 pub fn init_static_data() {
     START.call_once(|| unsafe {
         let locale_country_codes_0: HashMap<String, String> =
-            serde_json::from_str(&String::from_utf8_lossy(include_bytes!("locale_country_data.json"))).unwrap();
+            serde_json::from_str(&String::from_utf8_lossy(include_bytes!("../locale-data/to_country_data.json"))).unwrap();
         let locale_country_codes_1: &mut HashMap<String, Country> = &mut HashMap::new();
         for (locale_tag, country_code) in locale_country_codes_0 {
             let country_code = isocountry::CountryCode::for_alpha3(country_code.as_ref());
@@ -31,6 +31,8 @@ fn country_codes() -> &'static HashMap<String, Country> {
     }
 }
 
+/// Parses a locale code. If the given string is a valid language tag but its
+/// language subtag is not a known language, an error is returned instead.
 pub fn parse_locale<S: ToString>(src: S) -> Result<Locale, String> {
     let src = src.to_string();
     let src: &str = src.as_ref();
@@ -45,7 +47,7 @@ pub fn parse_locale<S: ToString>(src: S) -> Result<Locale, String> {
         if src == "us" { tag = LangTag::from_str("en_US").unwrap(); }
         if src == "jp" { tag = LangTag::from_str("ja_JP").unwrap(); }
     }
-    if basic_locale_data().get(&tag.get_language().to_string().replace("-", "")).is_none() {
+    if get_locale_basic_data().get(&tag.get_language().to_string().replace("-", "")).is_none() {
         return Err(String::from("Invalid locale code."));
     }
     Ok(Locale {
@@ -59,10 +61,10 @@ pub struct Locale {
 }
 
 impl Locale {
-    fn _get_basic_info(&self) -> Option<&BasicLanguageInfo> {
+    fn _get_basic_info(&self) -> Option<&LocaleBasicData> {
         let langscript = self._tag.get_language().to_string().replace("-", "");
         let langscript: &str = langscript.as_ref();
-        basic_locale_data().get(langscript)
+        get_locale_basic_data().get(langscript)
     }
 
     pub fn direction(&self) -> Direction {

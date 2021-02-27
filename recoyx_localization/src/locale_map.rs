@@ -313,8 +313,8 @@ impl LocaleMap {
         if let Some(r) = r { Some(r.to_string()) } else { None }
     }
 
-    pub fn select_plural_rule<N: TryInto<intl_pluralrules::operands::PluralOperands>>(&self, prt: intl_pluralrules::PluralRuleType, number: N) -> Result<intl_pluralrules::PluralCategory, &'static str> {
-        if prt == intl_pluralrules::PluralRuleType::ORDINAL {
+    pub fn select_plural_rule<N: TryInto<intl_pluralrules::operands::PluralOperands>>(&self, prt: PluralRuleType, number: N) -> Result<PluralCategory, &'static str> {
+        if prt == PluralRuleType::ORDINAL {
             if let Some(pr) = self._current_ordinal_plural_rules.clone() {
                 pr.select::<N>(number)
             }

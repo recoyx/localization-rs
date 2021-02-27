@@ -5,6 +5,7 @@ use std::{
     rc::Rc,
 };
 use super::*;
+use super::pluralrules::{PluralCategory, PluralRuleType};
 use maplit::{hashmap, hashset};
 use lazy_static::lazy_static;
 use lazy_regex::regex;

@@ -1,9 +1,4 @@
-use std::{
-    borrow::Borrow,
-    collections::{HashMap},
-    ops::Index,
-    sync::Once,
-};
+use std::{collections::{HashMap}};
 use regex::Regex;
 use lazy_static::lazy_static;
 use lazy_regex::regex;
@@ -74,4 +69,111 @@ fn compute_final_patterns(format_obj: &mut serde_json::Value) -> &serde_json::Va
     // Pattern 12 is always the default. We can produce the 24 by removing {ampm}
     format_obj["pattern"] = serde_json::Value::String(EXP_PATTERN_TRIMMER.replace_all(format_obj["pattern12"].as_str().unwrap().replace("{ampm}", "").as_ref(), "").into());
     format_obj
+}
+
+fn exp_dt_components_meta<'a>(_0: &'a str, format_obj: &mut serde_json::Value) -> &'a str {
+    match _0.chars().collect::<Vec<char>>().get(0).unwrap_or(&'0') {
+        // --- Era
+        'G' => {
+            format_obj["era"] = serde_json::Value::String(vec!["short", "short", "short", "long", "narrow"][_0.len() - 1].to_string());
+            "{era}"
+        },
+        // --- Year
+        'y' | 'Y' | 'u' | 'U' | 'r' => {
+            format_obj["year"] = serde_json::Value::String((if _0.len() == 2 { "2-digit" } else { "numeric" }).to_string());
+            "{year}"
+        },
+        // --- Quarter (not supported in this polyfill)
+        'Q' | 'q' => {
+            format_obj["quarter"] = serde_json::Value::String(vec!["numeric", "2-digit", "short", "long", "narrow"][_0.len() - 1].to_string());
+            "{quarter}"
+        },
+        // --- Month
+        'M' | 'L' => {
+            format_obj["month"] = serde_json::Value::String(vec!["numeric", "2-digit", "short", "long", "narrow"][_0.len() - 1].to_string());
+            "{month}"
+        },
+        // --- Week (not supported in this polyfill)
+        'w' => {
+            // week of the year
+            format_obj["week"] = serde_json::Value::String((if _0.len() == 2 { "2-digit" } else { "numeric" }).to_string());
+            "{weekday}"
+        },
+        'W' => {
+            // week of the month
+            format_obj["week"] = serde_json::Value::String("numeric".to_string());
+            "{weekday}"
+        },
+        // --- Day
+        'd' => {
+            // day of the month
+            format_obj["day"] = serde_json::Value::String((if _0.len() == 2 { "2-digit" } else { "numeric" }).to_string());
+            "{day}"
+        },
+        'D' | 'F' | 'g' => {
+            // 1..n: Modified Julian day
+            format_obj["day"] = serde_json::Value::String("numeric".to_string());
+            "{day}"
+        },
+        // --- Week Day
+        'E' => {
+            // day of the week
+            format_obj["weekday"] = serde_json::Value::String(vec!["short", "short", "short", "long", "narrow", "short"][_0.len() - 1].to_string());
+            "{weekday}"
+        },
+        'e' => {
+            // local day of the week
+            format_obj["weekday"] = serde_json::Value::String(vec!["numeric", "2-digit", "short", "long", "narrow", "short"][_0.len() - 1].to_string());
+            "{weekday}"
+        },
+        'c' => {
+            // stand alone local day of the week
+            format_obj["weekday"] = if _0.len() == 2 { serde_json::Value::Null } else { serde_json::Value::String(vec!["numeric", "2-digit", "short", "long", "narrow", "short"][_0.len() - 1].to_string()) };
+            "{weekday}"
+        },
+        // --- Period
+        'a' | // AM, PM
+        'b' | // am, pm, noon, midnight
+        'B' => { // flexible day periods
+            format_obj["hour12"] = serde_json::Value::Bool(true);
+            "{ampm}"
+        },
+        // --- Hour
+        'h' | 'H' => {
+            format_obj["hour"] = serde_json::Value::String((if _0.len() == 2 { "2-digit" } else { "numeric" }).to_string());
+            "{hour}"
+        },
+        'k' | 'K' => {
+            format_obj["hour12"] = serde_json::Value::Bool(true); // 12-hour-cycle time formats (using h or K)
+            format_obj["hour"] = serde_json::Value::String((if _0.len() == 2 { "2-digit" } else { "numeric" }).to_string());
+            "{hour}"
+        },
+        // --- Minute
+        'm' => {
+            format_obj["minute"] = serde_json::Value::String((if _0.len() == 2 { "2-digit" } else { "numeric" }).to_string());
+            "{minute}"
+        },
+        // --- Second
+        's' => {
+            format_obj["second"] = serde_json::Value::String((if _0.len() == 2 { "2-digit" } else { "numeric" }).to_string());
+            "{second}"
+        },
+        'S' | 'A' => {
+            format_obj["second"] = serde_json::Value::String("numeric".to_string());
+            "{second}"
+        },
+        // --- Timezone
+        'z' | // 1..3, 4: specific non-location format
+        'Z' | // 1..3, 4, 5: The ISO8601 varios formats
+        'O' | // 1, 4: miliseconds in day short, long
+        'v' | // 1, 4: generic non-location format
+        'V' | // 1, 2, 3, 4: time zone ID or city
+        'X' | // 1, 2, 3, 4: The ISO8601 various formats
+        'x' => { // 1, 2, 3, 4: The ISO8601 various formats
+            // This polyfill only supports much, for now, we are just doing something dummy.
+            format_obj["timeZoneName"] = serde_json::Value::String((if _0.len() < 4 { "short "} else { "long" }).to_string());
+            "{timeZoneName}"
+        },
+        _ => "{}",
+    }
 }

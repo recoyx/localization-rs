@@ -10,10 +10,6 @@ Features:
   - `Locale` and `parse_locale(str)`
   - `Country` and `parse_country(str)`
 
-Notes:
-
-- Currently not all locale codes have a country associated. Shall the need of a lacking one arise, you can contribute to the file locale_country_data.json.
-
 ## Getting started
 
 This example uses the [Tokio](https://tokio.rs) asynchronous runtime framework, solely for demonstrative purposes.

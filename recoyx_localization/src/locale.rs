@@ -2,37 +2,16 @@ use super::{
     LocaleBasicData, Direction, Country,
     get_locale_basic_data,
 };
-use std::{borrow::Borrow, collections::HashMap, fmt::{Display, Formatter}, hash::{Hash, Hasher}, rc::Rc, str::FromStr, sync::Once};
+use std::{fmt::{Display, Formatter}, hash::{Hash, Hasher}, rc::Rc, str::FromStr};
 use language_tag::LangTag;
-
-static START: Once = Once::new();
-static mut COUNTRY_CODES: Option<HashMap<String, Country>> = None;
-
-pub fn init_static_data() {
-    START.call_once(|| unsafe {
-        let locale_country_codes_0: HashMap<String, String> =
-            serde_json::from_str(&String::from_utf8_lossy(include_bytes!("../locale-data/to_country_data.json"))).unwrap();
-        let locale_country_codes_1: &mut HashMap<String, Country> = &mut HashMap::new();
-        for (locale_tag, country_code) in locale_country_codes_0 {
-            let country_code = isocountry::CountryCode::for_alpha3(country_code.as_ref());
-            if country_code.is_err() {
-                continue;
-            }
-            locale_country_codes_1.insert(locale_tag, Country { _standard_code: country_code.unwrap() });
-        }
-        COUNTRY_CODES = Some(locale_country_codes_1.clone());
-    });
-}
-
-fn country_codes() -> &'static HashMap<String, Country> {
-    unsafe {
-        init_static_data();
-        COUNTRY_CODES.as_ref().unwrap().borrow()
-    }
-}
 
 /// Parses a locale code. If the given string is a valid language tag but its
 /// language subtag is not a known language, an error is returned instead.
+///
+/// Some region codes are specially translated into the correct language identifier,
+/// such as from `jp` to `ja` and `br` to `pt-BR`.
+//
+///
 pub fn parse_locale<S: ToString>(src: S) -> Result<Locale, String> {
     let src = src.to_string();
     let src: &str = src.as_ref();
@@ -45,7 +24,7 @@ pub fn parse_locale<S: ToString>(src: S) -> Result<Locale, String> {
         let src = src.to_lowercase();
         if src == "br" { tag = LangTag::from_str("pt_BR").unwrap(); }
         if src == "us" { tag = LangTag::from_str("en_US").unwrap(); }
-        if src == "jp" { tag = LangTag::from_str("ja_JP").unwrap(); }
+        if src == "jp" { tag = LangTag::from_str("ja").unwrap(); }
     }
     if get_locale_basic_data().get(&tag.get_language().to_string().replace("-", "")).is_none() {
         return Err(String::from("Invalid locale code."));
@@ -83,12 +62,17 @@ impl Locale {
     }
 
     pub fn country(&self) -> Option<Country> {
-        let tagsrc =
-            if self._tag.get_region().is_some() {
-                format!("{}{}", self._tag.get_language().to_string(), self._tag.get_region().unwrap().to_string())
-            } else { self._tag.get_language().to_string() };
-        let r = country_codes().get(&tagsrc);
-        if let Some(r) = r { Some(r.clone()) } else { None }
+        if let Some(r) = self.standard_tag().get_region() {
+            let r = isocountry::CountryCode::for_alpha2_caseless((&r.to_string()).as_ref());
+            if let Ok(r) = r {
+                return Some(Country { _standard_code: r });
+            }
+        }
+        let s = self.standard_tag().to_string();
+        if s == "fr" { return Some(Country { _standard_code: isocountry::CountryCode::for_alpha3_caseless(&"FRA").unwrap() }); }
+        if s == "ja" { return Some(Country { _standard_code: isocountry::CountryCode::for_alpha3_caseless(&"JPN").unwrap() }); }
+        if s == "ru" { return Some(Country { _standard_code: isocountry::CountryCode::for_alpha3_caseless(&"RUS").unwrap() }); }
+        None
     }
 
     pub fn standard_tag(&self) -> &LangTag {

@@ -1,6 +1,6 @@
 mod locale_basic_data;
 use locale_basic_data::{
-    get_locale_basic_data, LocaleBasicData,
+    LOCALE_BASIC_DATA, LocaleBasicData,
 };
 pub use locale_basic_data::Direction;
 

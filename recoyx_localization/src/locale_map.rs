@@ -1,8 +1,13 @@
-use std::{cell::RefCell, collections::{HashMap, HashSet}, convert::TryInto, rc::Rc, sync::Once};
-use std::cell::Cell;
+use std::{
+    cell::{Cell, RefCell},
+    collections::{HashMap, HashSet},
+    convert::TryInto,
+    rc::Rc,
+};
 use super::*;
 use maplit::{hashmap, hashset};
-use regex::Regex;
+use lazy_static::lazy_static;
+use lazy_regex::regex;
 
 #[derive(Copy, Clone)]
 pub enum Gender {
@@ -280,26 +285,16 @@ impl LocaleMap {
     }
 
     fn apply_message(&self, message: String, vars: &HashMap<String, String>) -> String {
-        static START: Once = Once::new();
-        static mut RE: Option<Regex> = None;
-        START.call_once(|| unsafe {
-            RE = Some(Regex::new(r"\$(\$|[A-Za-z0-9_-]+)").unwrap());
-        });
-        struct R<'a> {
-            _vars: &'a HashMap<String, String>,
-        }
-        impl<'a> regex::Replacer for R<'a> {
-            fn replace_append(&mut self, caps: &regex::Captures<'_>, dst: &mut String) {
-                let cap = caps.get(0).unwrap().as_str();
-                if cap == "$" {
-                    dst.push_str("$");
-                } else {
-                    let v = self._vars.get(&cap.to_string().replace("$", ""));
-                    dst.push_str(if let Some(v) = v { v } else { "undefined" });
-                }
+        // regex!(r"\$(\$|[A-Za-z0-9_-]+)").replace_all(&message, R { _vars: vars }).as_ref().to_string()
+        regex!(r"\$(\$|[A-Za-z0-9_-]+)").replace_all(&message, |s: &regex::Captures<'_>| {
+            let s = s.get(0).unwrap().as_str();
+            if s == "$" {
+                "$"
+            } else {
+                let v = vars.get(&s.to_string().replace("$", ""));
+                if let Some(v) = v { v } else { "undefined" }
             }
-        }
-        (unsafe{ &RE }).clone().unwrap().replace_all(&message, R { _vars: vars }).as_ref().to_string()
+        }).as_ref().to_string()
     }
 
     fn resolve_id(&self, root: Option<&serde_json::Value>, id: &Vec<String>) -> Option<String> {

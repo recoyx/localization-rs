@@ -6,9 +6,12 @@ Features:
 
 - `LocaleMap`
   - Load assets from HTTP and File System.
+  - Handle plural rules.
 - General language code and country code manipulation.
   - `Locale` and `parse_locale(str)`
   - `Country` and `parse_country(str)`
+
+Support for ECMA-404 `Intl` features like date-time and relative-time formatting are upcoming.
 
 ## Getting started
 

@@ -2,6 +2,7 @@ use std::{collections::{HashMap}};
 use regex::Regex;
 use lazy_static::lazy_static;
 use lazy_regex::regex;
+use maplit::hashmap;
 
 lazy_static! {
     // Match these date-time components in a CLDR pattern, except those in single quotes
@@ -71,7 +72,7 @@ fn compute_final_patterns(format_obj: &mut serde_json::Value) -> &serde_json::Va
     format_obj
 }
 
-fn exp_dt_components_meta<'a>(_0: &'a str, format_obj: &mut serde_json::Value) -> &'a str {
+fn exp_dt_components_meta<'a>(_0: &str, format_obj: &mut serde_json::Value) -> &'a str {
     match _0.chars().collect::<Vec<char>>().get(0).unwrap_or(&'0') {
         // --- Era
         'G' => {
@@ -174,6 +175,181 @@ fn exp_dt_components_meta<'a>(_0: &'a str, format_obj: &mut serde_json::Value) -
             format_obj["timeZoneName"] = serde_json::Value::String((if _0.len() < 4 { "short "} else { "long" }).to_string());
             "{timeZoneName}"
         },
-        _ => "{}",
+        _ => "",
     }
+}
+
+/// Converts the CLDR availableFormats into the objects and patterns required by
+/// the ECMAScript Internationalization API specification.
+pub fn create_date_time_format(skeleton: String, pattern: String) -> serde_json::Value {
+    // We ignore certain patterns that are unsupported to avoid this expensive operation.
+    if UNWANTED_DTCS.is_match(pattern.clone().as_ref()) {
+        return serde_json::Value::Null;
+    }
+    
+    let mut format_obj = serde_json::Value::Object(serde_json::Map::new());
+    format_obj["originalPattern"] = serde_json::Value::String(pattern.clone());
+    format_obj["_"] = serde_json::Value::Object(serde_json::Map::new());
+
+    // Replace the pattern string with the one required by the specification, whilst
+    // at the same time evaluating it for the subsets and formats
+    format_obj["extendedPattern"] = serde_json::Value::String(EXP_DT_COMPONENTS.replace_all(pattern.as_ref(), |cap: &regex::Captures| {
+        exp_dt_components_meta(&cap[0], &mut format_obj["_"]).clone()
+    }).into());
+
+    // Match the skeleton string with the one required by the specification
+    // this implementation is based on the Date Field Symbol Table:
+    // http://unicode.org/reports/tr35/tr35-dates.html#Date_Field_Symbol_Table
+    // Note: we are adding extra data to the formatObject even though this polyfill
+    //       might not support it.
+    EXP_DT_COMPONENTS.replace_all(skeleton.as_ref(), |cap: &regex::Captures| {
+        exp_dt_components_meta(&cap[0], &mut format_obj)
+    });
+
+    compute_final_patterns(&mut format_obj).clone()
+}
+
+/// Processes DateTime formats from CLDR to an easier-to-parse format.
+/// the result of this operation should be cached the first time a particular
+/// calendar is analyzed.
+///
+/// The specification requires we support at least the following subsets of
+/// date/time components:
+///
+///   - 'weekday', 'year', 'month', 'day', 'hour', 'minute', 'second'
+///   - 'weekday', 'year', 'month', 'day'
+///   - 'year', 'month', 'day'
+///   - 'year', 'month'
+///   - 'month', 'day'
+///   - 'hour', 'minute', 'second'
+///   - 'hour', 'minute'
+///
+/// We need to cherry pick at least these subsets from the CLDR data and convert
+/// them into the pattern objects used in the ECMA-402 API.
+pub fn create_date_time_formats(formats: &serde_json::Value) -> serde_json::Value {
+    let available_formats = &formats["availableFormats"].as_object().unwrap();
+    let time_formats = &formats["timeFormats"].as_object().unwrap();
+    let date_formats = &formats["dateFormats"].as_object().unwrap();
+    let mut result: Vec<serde_json::Value> = vec![];
+    let mut time_related_formats: Vec<serde_json::Value> = vec![];
+    let mut date_related_formats: Vec<serde_json::Value> = vec![];
+
+    // Map available (custom) formats into a pattern for create_date_time_formats
+    for (skeleton, pattern) in available_formats.iter() {
+        let computed = create_date_time_format(skeleton.clone(), pattern.as_str().unwrap().to_string());
+        if computed.is_object() {
+            result.push(computed.clone());
+            // in some cases, the format is only displaying date specific props
+            // or time specific props, in which case we need to also produce the
+            // combined formats.
+            if is_date_format_only(&computed) {
+                date_related_formats.push(computed);
+            } else if is_time_format_only(&computed) {
+                time_related_formats.push(computed);
+            }
+        }
+    }
+
+    // Map time formats into a pattern for create_date_time_formats
+    for (skeleton, pattern) in time_formats.iter() {
+        let computed = create_date_time_format(skeleton.clone(), pattern.as_str().unwrap().to_string());
+        if computed.is_object() {
+            result.push(computed.clone());
+            time_related_formats.push(computed);
+        }
+    }
+
+    // Map date formats into a pattern for create_date_time_formats
+    for (skeleton, pattern) in date_formats.iter() {
+        let computed = create_date_time_format(skeleton.clone(), pattern.as_str().unwrap().to_string());
+        if computed.is_object() {
+            result.push(computed.clone());
+            date_related_formats.push(computed);
+        }
+    }
+
+    // combine custom time and custom date formats when they are orthogonals to complete the
+    // formats supported by CLDR.
+    // This Algo is based on section "Missing Skeleton Fields" from:
+    // http://unicode.org/reports/tr35/tr35-dates.html#availableFormats_appendItems
+
+    for i in 0..time_related_formats.len() {
+        for j in 0..date_related_formats.len() {
+            let mut pattern: String = "".to_string();
+            if date_related_formats[j].get("month").is_some() && date_related_formats[j]["month"] == serde_json::Value::String("long".to_string()) {
+                pattern = formats[if date_related_formats[j].get("weekday").is_some() { "full" } else { "long" }].as_str().unwrap().to_string();
+            } else if date_related_formats[j].get("month").is_some() && date_related_formats[j]["month"] == serde_json::Value::String("short".to_string()) {
+                pattern = formats["medium"].as_str().unwrap().to_string();
+            } else {
+                pattern = formats["short"].as_str().unwrap().to_string();
+            }
+            let mut computed = join_date_and_time_formats(&date_related_formats[j], &time_related_formats[i]);
+            computed["originalPattern"] = serde_json::Value::String(pattern.clone());
+            computed["extendedPattern"] = serde_json::Value::String(regex!(r"(?i)^[,\s]+|[,\s]+$").replace_all(
+                pattern
+                    .replace("{0}", time_related_formats[i]["extendedPattern"].as_str().unwrap())
+                    .replace("{1}", date_related_formats[j]["extendedPattern"].as_str().unwrap())
+                    .as_ref(),
+            "").into());
+            result.push(compute_final_patterns(&mut computed).clone());
+        }
+    }
+
+    serde_json::Value::Array(result)
+}
+
+lazy_static! {
+    // this represents the exceptions of the rule that are not covered by CLDR availableFormats
+    // for single property configurations, they play no role when using multiple properties, and
+    // those that are not in this table, are not exceptions or are not covered by the data we
+    // provide.
+    static ref VALID_SYNTHETIC_PROPS: HashMap<String, HashMap<String, String>> = (hashmap! {
+        "second" => hashmap! {
+            "numeric" => "s",
+            "2-digit" => "ss"
+        },
+        "minute" => hashmap! {
+            "numeric" => "m",
+            "2-digit" => "mm"
+        },
+        "year" => hashmap! {
+            "numeric" => "y",
+            "2-digit" => "yy"
+        },
+        "day" => hashmap! {
+            "numeric" => "d",
+            "2-digit" => "dd"
+        },
+        "month" => hashmap! {
+            "numeric" => "L",
+            "2-digit" => "LL",
+            "narrow" => "LLLLL",
+            "short" => "LLL",
+            "long" => "LLLL"
+        },
+        "weekday" => hashmap! {
+            "narrow" => "ccccc",
+            "short" => "ccc",
+            "long" => "cccc"
+        },
+    })
+        .iter().map(|(&k, v)| {
+            (String::from(k), v.iter().map(|(k, v)| (k.to_string(), v.to_string())).collect())
+        }).collect();
+}
+
+pub fn generate_synthetic_format(prop_name: String, prop_value: serde_json::Value) -> serde_json::Value {
+    if VALID_SYNTHETIC_PROPS.get::<String>(&prop_name).is_some() && VALID_SYNTHETIC_PROPS[&prop_name.clone()].get(prop_value.as_str().unwrap()).is_some() {
+        let mut m = serde_json::Map::new();
+        m.insert("originalPattern".to_string(), serde_json::Value::String(VALID_SYNTHETIC_PROPS[&prop_name.clone()][prop_value.as_str().unwrap()].to_string()));
+        let mut um = serde_json::Map::new();
+        um[&prop_name] = prop_value.clone();
+        m.insert("_".to_string(), serde_json::Value::Object(um));
+        m.insert("extendedPattern".to_string(), serde_json::Value::String(format!("{{{}}}", prop_name.clone())));
+        m.insert(prop_name.clone(), prop_value);
+        m.insert("pattern12".to_string(), serde_json::Value::String(format!("{{{}}}", prop_name.clone())));
+        m.insert("pattern".to_string(), serde_json::Value::String(format!("{{{}}}", prop_name)));
+        return serde_json::Value::Object(m);
+    }
+    serde_json::Value::Null
 }

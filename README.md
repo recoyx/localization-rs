@@ -11,7 +11,11 @@ Features:
   - `Locale` and `parse_locale(str)`
   - `Country` and `parse_country(str)`
 
-Support for ECMA-404 `Intl` features like date-time and relative-time formatting are upcoming.
+Support for these features are upcoming:
+
+- Relative-time formatting
+- Date and time formatting
+- Number formatting
 
 ## Getting started
 

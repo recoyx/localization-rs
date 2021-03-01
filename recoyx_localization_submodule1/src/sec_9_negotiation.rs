@@ -180,9 +180,49 @@ pub fn unicode_extension_subtags<S: ToString>(extension: S) -> Vec<String> {
 /// requestedLocales against the locales in availableLocales and determines the
 /// best available language to meet the request. availableLocales and
 /// requestedLocales must be provided as List values, options as a Record.
-pub fn /* 9.2.5 */ resolve_locale<Sa, Sb>(available_locales: Vec<Sa>, requested_locales: Vec<Sb>)
-    where Sa: ToString, Sb: ToString
+pub fn /* 9.2.5 */ resolve_locale<Sa, Sb, Sc>(available_locales: Vec<Sa>, requested_locales: Vec<Sb>, options: &HashMap<String, String>, relevant_extension_keys: Vec<Sc>, locale_data: &serde_json::Value) -> HashMap<String, String>
+    where Sa: ToString, Sb: ToString, Sc: ToString
 {
     let available_locales: Vec<String> = available_locales.iter().map(|s| s.to_string()).collect();
     let requested_locales: Vec<String> = requested_locales.iter().map(|s| s.to_string()).collect();
+    let relevant_extension_keys: Vec<String> = relevant_extension_keys.iter().map(|s| s.to_string()).collect();
+
+    if available_locales.len() == 0 {
+        panic!("No locale data has been provided for this object yet.");
+    }
+
+    let matcher = options.get("[[localeMatcher]]").unwrap();
+    let mut r: Option<HashMap<String, String>> = None;
+
+    if matcher == "lookup" {
+        r = Some(lookup_matcher(available_locales, requested_locales));
+    } else {
+        r = Some(best_fit_matcher(available_locales, requested_locales));
+    }
+
+    let r = r.unwrap();
+    let found_locale = &r["[[locale]]"];
+
+    let mut extension_subtags: Option<Vec<String>> = None;
+    let mut extension_subtags_len = 0;
+
+    if let Some(extension) = r.get("[[extension]]") {
+        extension_subtags = Some(unicode_extension_subtags(extension));
+        extension_subtags_len = extension_subtags.unwrap().len();
+    }
+
+    let mut result = HashMap::<String, String>::new();
+    result.insert("[[dataLocale]]".to_string(), found_locale.clone());
+
+    let mut i = 0;
+    let len = relevant_extension_keys.len();
+
+    while i < len {
+        let key = relevant_extension_keys[i].clone();
+        let found_locale_data = locale_data[found_locale];
+        let key_locale_data = found_locale_data[key];
+        let value = key_locale_data[];
+    }
+
+    result
 }

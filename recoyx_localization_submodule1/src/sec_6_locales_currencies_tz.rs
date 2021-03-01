@@ -448,6 +448,21 @@ pub fn canonicalize_language_tag(locale: String) -> String {
     parts.join("-").to_string()
 }
 
+static mut DEFAULT_LOCALE: Option<String> = None;
+
+/**
+ * The DefaultLocale abstract operation returns a String value representing the
+ * structurally valid (6.2.2) and canonicalized (6.2.3) BCP 47 language tag for the
+ * host environment’s current locale.
+ */
+pub fn /* 6.2.4 */ default_locale() -> Option<String> {
+    unsafe { DEFAULT_LOCALE.clone() }
+}
+
+pub fn set_default_locale(locale: Option<String>) {
+    unsafe { DEFAULT_LOCALE = locale; };
+}
+
 // Sect 6.3 Currency Codes
 // =======================
 

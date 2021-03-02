@@ -54,6 +54,7 @@ pub struct LocaleMap {
     _current_locale: Option<Locale>,
     _current_ordinal_plural_rules: Option<intl_pluralrules::PluralRules>,
     _current_cardinal_plural_rules: Option<intl_pluralrules::PluralRules>,
+    _current_timeago_language: Option<Rc<Box<dyn timeago::Language>>>,
     _locale_path_components: Rc<HashMap<Locale, String>>,
     _supported_locales: Rc<HashSet<Locale>>,
     _default_locale: Locale,
@@ -83,6 +84,7 @@ impl LocaleMap {
             _current_locale: None,
             _current_cardinal_plural_rules: None,
             _current_ordinal_plural_rules: None,
+            _current_timeago_language: None,
             _locale_path_components: Rc::new(locale_path_components),
             _supported_locales: Rc::new(supported_locales),
             _default_locale: parse_locale(&default_locale).unwrap(),
@@ -143,7 +145,20 @@ impl LocaleMap {
         self._current_locale = Some(new_locale.clone());
         let new_locale_code = unic_langid::LanguageIdentifier::from_bytes(new_locale.clone().standard_tag().to_string().as_ref()).unwrap();
         self._current_ordinal_plural_rules = self.load_plural_rules(new_locale_code.clone(), intl_pluralrules::PluralRuleType::ORDINAL);
-        self._current_cardinal_plural_rules = self.load_plural_rules(new_locale_code, intl_pluralrules::PluralRuleType::CARDINAL);
+        self._current_cardinal_plural_rules = self.load_plural_rules(new_locale_code.clone(), intl_pluralrules::PluralRuleType::CARDINAL);
+        self._current_timeago_language = None;
+
+        let new_isolang_lang = isolang::Language::from_639_1(new_locale_code.clone().language.as_str()).unwrap();
+        let new_timeago_lang = timeago::from_isolang(new_isolang_lang);
+
+        if let Some(l) = new_timeago_lang {
+            self._current_timeago_language = Some(Rc::new(l));
+        }
+
+        if self._current_timeago_language.is_none() {
+            self._current_timeago_language = Some(Rc::new(Box::new(timeago::languages::english::English)));
+        }
+
         true
     }
 
@@ -331,6 +346,55 @@ impl LocaleMap {
             }
         }
     }
+
+    pub fn relative_time_format(&self, duration: std::time::Duration) -> String {
+        let l = self._current_timeago_language.clone();
+        if l.is_none() {
+            return "undefined".to_string();
+        }
+        let l = l.unwrap();
+        let secs = duration.as_secs();
+        if secs < 60 {
+            return l.too_low().to_string();
+        }
+        let mins = secs / 60;
+        if mins < 60 {
+            let m = mins.to_string() + " " + l.get_word(timeago::TimeUnit::Minutes, mins);
+            let ago = l.ago().to_string();
+            return format!("{} {}", if l.place_ago_before() { ago.clone() } else { m.clone() }, if l.place_ago_before() { m } else { ago });
+        }
+        let hours = mins / 60;
+        if hours < 60 {
+            let h = hours.to_string() + " " + l.get_word(timeago::TimeUnit::Hours, hours);
+            let ago = l.ago().to_string();
+            return format!("{} {}", if l.place_ago_before() { ago.clone() } else { h.clone() }, if l.place_ago_before() { h } else { ago });
+        }
+        let days = hours / 24;
+        if days < 30 {
+            let d = days.to_string() + " " + l.get_word(timeago::TimeUnit::Days, days);
+            let ago = l.ago().to_string();
+            return format!("{} {}", if l.place_ago_before() { ago.clone() } else { d.clone() }, if l.place_ago_before() { d } else { ago });
+        }
+        let weeks = days / 7;
+        if weeks < 5 {
+            let w = weeks.to_string() + " " + l.get_word(timeago::TimeUnit::Weeks, weeks);
+            let ago = l.ago().to_string();
+            return format!("{} {}", if l.place_ago_before() { ago.clone() } else { w.clone() }, if l.place_ago_before() { w } else { ago });
+        }
+        let mut months = weeks / 4;
+        if months == 0 {
+            months = 1;
+        }
+        if months < 13 {
+            let m = months.to_string() + " " + l.get_word(timeago::TimeUnit::Months, months);
+            let ago = l.ago().to_string();
+            return format!("{} {}", if l.place_ago_before() { ago.clone() } else { m.clone() }, if l.place_ago_before() { m } else { ago });
+        }
+        let years = months / 12;
+        let y = years.to_string() + " " + l.get_word(timeago::TimeUnit::Years, years);
+        let ago = l.ago().to_string();
+        return format!("{} {}", if l.place_ago_before() { ago.clone() } else { y.clone() }, if l.place_ago_before() { y } else { ago });
+    }
 }
 
 impl Clone for LocaleMap {
@@ -339,6 +403,7 @@ impl Clone for LocaleMap {
             _current_locale: self._current_locale.clone(),
             _current_cardinal_plural_rules: self._current_cardinal_plural_rules.clone(),
             _current_ordinal_plural_rules: self._current_ordinal_plural_rules.clone(),
+            _current_timeago_language: self._current_timeago_language.clone(),
             _locale_path_components: self._locale_path_components.clone(),
             _supported_locales: self._supported_locales.clone(),
             _default_locale: self._default_locale.clone(),

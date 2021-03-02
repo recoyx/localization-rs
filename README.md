@@ -7,13 +7,13 @@ Features:
 - `LocaleMap`
   - Load assets from HTTP and File System.
   - Handle plural rules.
+  - Relative-time formatting.
 - General language code and country code manipulation.
   - `Locale` and `parse_locale(str)`
   - `Country` and `parse_country(str)`
 
 Support for these features are upcoming:
 
-- Relative-time formatting
 - Date and time formatting
 - Number formatting
 

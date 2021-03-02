@@ -347,7 +347,7 @@ impl LocaleMap {
         }
     }
 
-    pub fn relative_time_format(&self, duration: std::time::Duration) -> String {
+    pub fn format_relative_time(&self, duration: std::time::Duration) -> String {
         let l = self._current_timeago_language.clone();
         if l.is_none() {
             return "undefined".to_string();

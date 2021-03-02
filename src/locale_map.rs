@@ -179,7 +179,11 @@ impl LocaleMap {
         match self._assets_loader_type {
             LocaleMapLoaderType::FileSystem => {
                 for base_name in self._assets_base_file_names.iter() {
-                    let res_path = format!("{}/{}/{}.json", self._assets_src, self._locale_path_components.get(locale).unwrap(), base_name);
+                    let locale_path_comp = self._locale_path_components.get(locale);
+                    if locale_path_comp.is_none() {
+                        panic!("Fallback locale is not supported a locale: {}", locale.standard_tag().to_string());
+                    }
+                    let res_path = format!("{}/{}/{}.json", self._assets_src, locale_path_comp.unwrap(), base_name);
                     let content = std::fs::read(res_path.clone());
                     if content.is_err() {
                         println!("Failed to load resource at {}.", res_path);
@@ -478,10 +482,8 @@ impl LocaleMapOptions {
     pub fn new() -> Self {
         LocaleMapOptions {
             _default_locale: RefCell::new("en".to_string()),
-            _supported_locales: RefCell::new(vec!["en".to_string(), "en-US".to_string()]),
-            _fallbacks: RefCell::new(hashmap! {
-                "en-US".to_string() => vec!["en".to_string()]
-            }),
+            _supported_locales: RefCell::new(vec!["en".to_string()]),
+            _fallbacks: RefCell::new(hashmap! {}),
             _assets: RefCell::new(LocaleMapAssetOptions::new()),
         }
     }

@@ -7,7 +7,7 @@ Features:
 - `LocaleMap`
   - Load assets from HTTP and File System.
   - Handle plural rules.
-  - Relative-time formatting.
+  - Relative-time formatting. This relies on the crate [timeago](https://crates.io/crates/timeago).
 - General language code and country code manipulation.
   - `Locale` and `parse_locale(str)`
   - `Country` and `parse_country(str)`

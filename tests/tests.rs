@@ -16,24 +16,15 @@ fn locale_country() {
 async fn locale_map() {
     let mut locale_map = LocaleMap::new(
         LocaleMapOptions::new()
-            // Specify supported locale codes.
-            // The form in which the locale code appears here
-            // is a post-component for the assets "src" path. 
-            // For example: "path/to/res/lang/en-US"
-            .supported_locales(vec!["en", "en-US", "pt-BR"])
+            .supported_locales(vec!["en-US"])
             .default_locale("en-US")
-            .fallbacks(hashmap! {
-                "en-US" => vec!["en"],
-                "pt-BR" => vec!["en-US"],
-            })
             .assets(LocaleMapAssetOptions::new()
                 .src("tests/res")
                 .base_file_names(vec!["common"])
-                // "auto_clean" indicates whether to clean previous unused locale data. 
                 .auto_clean(true)
-                // Specify LocaleMapLoaderType::FileSystem or LocaleMapLoaderType::Http
                 .loader_type(LocaleMapLoaderType::FileSystem))
     ); // locale_map
     locale_map.load(None).await;
     assert!(locale_map.supports_locale(&parse_locale("en-US").unwrap()));
+    assert_eq!(locale_map.format_relative_time(std::time::Duration::from_secs(10 * 60 * 60 * 24)), "10 days ago");
 }

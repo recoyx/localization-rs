@@ -104,6 +104,10 @@ impl LocaleMap {
         self._current_locale.clone()
     }
 
+    pub fn create_relative_time_formatter(&self) -> Option<Rc<timeago::Formatter<timeago::BoxedLanguage>>> {
+        self._current_timeago_formatter.clone()
+    }
+
     /// Equivalent to `load()` method.
     pub async fn update_locale(&mut self, new_locale: Locale) -> bool {
         self.load(Some(new_locale)).await

@@ -1,5 +1,4 @@
 use recoyx_localization::*;
-use maplit::*;
 use futures_await_test::async_test;
 
 #[test]

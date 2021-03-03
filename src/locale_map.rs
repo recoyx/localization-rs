@@ -104,8 +104,8 @@ impl LocaleMap {
         self._current_locale.clone()
     }
 
-    pub fn create_relative_time_formatter(&self) -> Rc<timeago::Formatter<timeago::BoxedLanguage>> {
-        self._current_timeago_formatter.unwrap().clone()
+    pub fn create_relative_time_formatter(&self) -> timeago::Formatter<timeago::BoxedLanguage> {
+        self._current_timeago_formatter.clone().unwrap().as_ref().clone()
     }
 
     /// Equivalent to `load()` method.

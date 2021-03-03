@@ -1,4 +1,4 @@
-use std::{borrow::Borrow, cell::{Cell, RefCell}, collections::{HashMap, HashSet}, convert::TryInto, rc::Rc};
+use std::{cell::{Cell, RefCell}, collections::{HashMap, HashSet}, convert::TryInto, rc::Rc};
 use super::*;
 use super::pluralrules::{PluralCategory, PluralRuleType};
 use maplit::{hashmap, hashset};
@@ -380,20 +380,22 @@ impl LocaleMap {
         self.create_relative_time_formatter().convert(duration)
     }
 
-    /// Creates a date and time formatter.
+    /// Creates a date and time formatter. For more details, refer to the [icu_datetime crate](https://crates.io/crates/icu_datetime).
     pub fn create_date_time_formatter(&self, options: &super::date_time_format::DateTimeFormatOptions) -> super::DateTimeFormatter {
         if self._current_locale.is_none() {
             panic!("No locale has been loaded.");
         }
-        let locale = self._current_locale.unwrap();
-        let mut lid: Result<icu_locid::LanguageIdentifier, icu_locid::ParserError> = (locale.standard_tag().get_language().to_string() + (if locale.standard_tag().get_region().is_some() { locale.standard_tag().get_region().unwrap().to_string().as_ref() } else { "" })).parse();
+        let locale = self._current_locale.clone().unwrap();
+        let mut lid: Result<icu_locid::LanguageIdentifier, icu_locid::ParserError> = (locale.standard_tag().get_language().to_string()
+            + (if locale.standard_tag().get_region().is_some() { locale.standard_tag().get_region().unwrap().to_string() } else { "".to_string() }).as_ref()
+        ).parse();
         if lid.is_err() {
             lid = "en".parse();
         }
         let lid = lid.unwrap();
-        let mut r = super::date_time_format::DateTimeFormatter::try_new(lid, &ICU_PROVIDER, options);
+        let mut r = super::date_time_format::DateTimeFormatter::try_new(lid, &*ICU_PROVIDER, options);
         if r.is_err() {
-            r = super::date_time_format::DateTimeFormatter::try_new("en".parse().unwrap(), &ICU_PROVIDER, options);
+            r = super::date_time_format::DateTimeFormatter::try_new("en".parse().unwrap(), &*ICU_PROVIDER, options);
         }
         r.unwrap()
     }

@@ -26,4 +26,5 @@ async fn locale_map() {
     locale_map.load(None).await;
     assert!(locale_map.supports_locale(&parse_locale("en-US").unwrap()));
     assert_eq!(locale_map.format_relative_time(std::time::Duration::from_secs(10 * 60 * 60 * 24)), "1 week ago");
+    println!("{}", locale_map.create_date_time_formatter(&Default::default()).format(&recoyx_localization::date_time_format::date::MockDateTime::try_new(2020, 9, 1, 12, 34, 28).unwrap()));
 }

@@ -38,6 +38,7 @@ Example asset located at `path/to/res/lang/en/common.json`:
     "parameterized": "Here: $x",
     "contextual_male": "Male message",
     "contextual_female": "Female message",
+    "contextual_other": "Other message",
     "qty_empty": "Empty ($number)",
     "qty_one": "One ($number)",
     "qty_multiple": "Multiple ($number)"

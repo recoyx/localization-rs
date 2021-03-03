@@ -16,10 +16,19 @@ pub use locale_map::{
     LocaleMapLoaderType, LocaleMapFormatArgument,
     Gender,
 };
+
 pub mod pluralrules {
-    pub use intl_pluralrules::{PluralCategory, PluralRuleType};
+    pub use intl_pluralrules::{PluralCategory, PluralRuleType, operands::PluralOperands};
 }
+pub use pluralrules::{
+    PluralCategory, PluralRuleType, PluralOperands,
+};
+
 pub mod relative_time_format {
     pub type Formatter = timeago::Formatter<timeago::BoxedLanguage>;
     pub use timeago::TimeUnit;
 }
+pub use relative_time_format::{
+    Formatter as RelativeTimeFormatter,
+    TimeUnit as RelativeTimeUnit,
+};

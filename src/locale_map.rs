@@ -1,14 +1,16 @@
-use std::{borrow::Borrow, cell::{Cell, RefCell}, collections::{HashMap, HashSet}, convert::TryInto, rc::Rc};
+use std::{cell::{Cell, RefCell}, collections::{HashMap, HashSet}, convert::TryInto, rc::Rc};
 use super::*;
 use super::pluralrules::{PluralCategory, PluralRuleType};
 use maplit::{hashmap, hashset};
 use lazy_static::lazy_static;
 use lazy_regex::regex;
 
+/// Gender enumeration. This enumeration can be used as a message formatting argument.
 #[derive(Copy, Clone)]
 pub enum Gender {
     Male,
     Female,
+    Other,
 }
 
 #[macro_export]
@@ -45,11 +47,13 @@ macro_rules! localization_vars {
     };
 }
 
+/// Flexible locale mapping with support for loading message resources,
+/// plural rule selection and relative-time formatting.
 pub struct LocaleMap {
     _current_locale: Option<Locale>,
     _current_ordinal_plural_rules: Option<intl_pluralrules::PluralRules>,
     _current_cardinal_plural_rules: Option<intl_pluralrules::PluralRules>,
-    _current_relative_time_formatter: Option<Rc<super::relative_time_format::Formatter>>,
+    _current_relative_time_formatter: Option<Rc<super::RelativeTimeFormatter>>,
     _locale_path_components: Rc<HashMap<Locale, String>>,
     _supported_locales: Rc<HashSet<Locale>>,
     _default_locale: Locale,
@@ -62,6 +66,7 @@ pub struct LocaleMap {
 }
 
 impl LocaleMap {
+    /// Constructs a `LocaleMap` object.
     pub fn new(options: &LocaleMapOptions) -> Self {
         let mut locale_path_components = HashMap::<Locale, String>::new();
         let mut supported_locales = HashSet::<Locale>::new();
@@ -92,30 +97,37 @@ impl LocaleMap {
         }
     }
 
+    /// Returns a set of supported locale codes, reflecting
+    /// the ones that were specified when constructing the `LocaleMap`.
     pub fn supported_locales(&self) -> HashSet<Locale> {
         self._supported_locales.as_ref().clone()
     }
 
+    /// Returns `true` if the locale is one of the supported locales
+    /// that were specified when constructing the `LocaleMap`,
+    /// otherwise `false`.
     pub fn supports_locale(&self, arg: &Locale) -> bool {
         self._supported_locales.contains(arg)
     }
 
+    /// Returns the currently loaded locale.
     pub fn current_locale(&self) -> Option<Locale> {
         self._current_locale.clone()
     }
 
-    pub fn create_relative_time_formatter(&self) -> super::relative_time_format::Formatter {
-        self._current_relative_time_formatter.clone().unwrap().as_ref().clone()
-    }
-
-    /// Equivalent to `load()` method.
+    /// Attempts to load the specified locale and its fallbacks.
+    /// If any resource fails to load, the method returns `false`, otherwise `true`.
     pub async fn update_locale(&mut self, new_locale: Locale) -> bool {
         self.load(Some(new_locale)).await
     }
 
-    /// Attempts to load specified, current or default locale.
+    /// Attempts to load a locale and its fallbacks.
+    /// If the locale argument is specified, it is loaded.
+    /// Otherwise, if there is a default locale, it is loaded, and if not,
+    /// the method panics.
+    ///
+    /// If any resource fails to load, the method returns `false`, otherwise `true`.
     pub async fn load(&mut self, mut new_locale: Option<Locale>) -> bool {
-        if new_locale.is_none() { new_locale = self.current_locale(); }
         if new_locale.is_none() { new_locale = Some(self._default_locale.clone()); }
         let new_locale = new_locale.unwrap();
         if !self.supports_locale(&new_locale) {
@@ -261,7 +273,8 @@ impl LocaleMap {
         if let Some(g) = gender {
             match g {
                 Gender::Male => { id.push_str("_male"); },
-                Gender::Female => { id.push_str("_female"); }
+                Gender::Female => { id.push_str("_female"); },
+                Gender::Other => { id.push_str("_other"); }
             }
         }
 
@@ -329,7 +342,8 @@ impl LocaleMap {
         if let Some(r) = r { Some(r.to_string()) } else { None }
     }
 
-    pub fn select_plural_rule<N: TryInto<intl_pluralrules::operands::PluralOperands>>(&self, prt: PluralRuleType, number: N) -> Result<PluralCategory, &'static str> {
+    /// Selects the plural rule given a `PluralRuleType` and a number.
+    pub fn select_plural_rule<N: TryInto<super::PluralOperands>>(&self, prt: PluralRuleType, number: N) -> Result<PluralCategory, &'static str> {
         if prt == PluralRuleType::ORDINAL {
             if let Some(pr) = self._current_ordinal_plural_rules.clone() {
                 pr.select::<N>(number)
@@ -348,11 +362,18 @@ impl LocaleMap {
         }
     }
 
-    pub fn format_relative_time(&self, duration: std::time::Duration) -> String {
+    /// Creates a relative-time formatter, which by default
+    /// emits one item (chunk), limits to seconds and has no maximum duration.
+    pub fn create_relative_time_formatter(&self) -> super::RelativeTimeFormatter {
         if self._current_relative_time_formatter.is_none() {
-            return "undefined".to_string();
+            panic!("No locale has been loaded.");
         }
-        self._current_relative_time_formatter.borrow().clone().unwrap().convert(duration)
+        self._current_relative_time_formatter.clone().unwrap().as_ref().clone()
+    }
+
+    /// Formats a duration into relative-time language, emitting one item.
+    pub fn format_relative_time(&self, duration: std::time::Duration) -> String {
+        self.create_relative_time_formatter().convert(duration)
     }
 }
 

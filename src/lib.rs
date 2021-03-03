@@ -32,3 +32,17 @@ pub use relative_time_format::{
     Formatter as RelativeTimeFormatter,
     TimeUnit as RelativeTimeUnit,
 };
+
+pub mod date_time_format {
+    pub use icu_datetime::{
+        DateTimeFormat as DateTimeFormatter,
+        DateTimeFormatError,
+        DateTimeFormatOptions,
+        FormattedDateTime,
+        options,
+        date,
+    };
+}
+pub use date_time_format::{
+    DateTimeFormatter,
+};

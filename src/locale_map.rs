@@ -1,4 +1,4 @@
-use std::{cell::{Cell, RefCell}, collections::{HashMap, HashSet}, convert::TryInto, rc::Rc};
+use std::{borrow::Borrow, cell::{Cell, RefCell}, collections::{HashMap, HashSet}, convert::TryInto, rc::Rc};
 use super::*;
 use super::pluralrules::{PluralCategory, PluralRuleType};
 use maplit::{hashmap, hashset};
@@ -45,6 +45,10 @@ macro_rules! localization_vars {
             _map
         }
     };
+}
+
+lazy_static! {
+    static ref ICU_PROVIDER: icu_provider_fs::FsDataProvider = icu_testdata::get_provider();
 }
 
 /// Flexible locale mapping with support for loading message resources,
@@ -374,6 +378,24 @@ impl LocaleMap {
     /// Formats a duration into relative-time language, emitting one item.
     pub fn format_relative_time(&self, duration: std::time::Duration) -> String {
         self.create_relative_time_formatter().convert(duration)
+    }
+
+    /// Creates a date and time formatter.
+    pub fn create_date_time_formatter(&self, options: &super::date_time_format::DateTimeFormatOptions) -> super::DateTimeFormatter {
+        if self._current_locale.is_none() {
+            panic!("No locale has been loaded.");
+        }
+        let locale = self._current_locale.unwrap();
+        let mut lid: Result<icu_locid::LanguageIdentifier, icu_locid::ParserError> = (locale.standard_tag().get_language().to_string() + (if locale.standard_tag().get_region().is_some() { locale.standard_tag().get_region().unwrap().to_string().as_ref() } else { "" })).parse();
+        if lid.is_err() {
+            lid = "en".parse();
+        }
+        let lid = lid.unwrap();
+        let mut r = super::date_time_format::DateTimeFormatter::try_new(lid, &ICU_PROVIDER, options);
+        if r.is_err() {
+            r = super::date_time_format::DateTimeFormatter::try_new("en".parse().unwrap(), &ICU_PROVIDER, options);
+        }
+        r.unwrap()
     }
 }
 

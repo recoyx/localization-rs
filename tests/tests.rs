@@ -26,5 +26,5 @@ async fn locale_map() {
     ); // locale_map
     locale_map.load(None).await;
     assert!(locale_map.supports_locale(&parse_locale("en-US").unwrap()));
-    assert_eq!(locale_map.format_relative_time(std::time::Duration::from_secs(10 * 60 * 60 * 24)), "10 days ago");
+    assert_eq!(locale_map.format_relative_time(std::time::Duration::from_secs(10 * 60 * 60 * 24)), "1 week ago");
 }

@@ -1,9 +1,4 @@
-use std::{
-    cell::{Cell, RefCell},
-    collections::{HashMap, HashSet},
-    convert::TryInto,
-    rc::Rc,
-};
+use std::{borrow::Borrow, cell::{Cell, RefCell}, collections::{HashMap, HashSet}, convert::TryInto, rc::Rc};
 use super::*;
 use super::pluralrules::{PluralCategory, PluralRuleType};
 use maplit::{hashmap, hashset};
@@ -54,12 +49,12 @@ pub struct LocaleMap {
     _current_locale: Option<Locale>,
     _current_ordinal_plural_rules: Option<intl_pluralrules::PluralRules>,
     _current_cardinal_plural_rules: Option<intl_pluralrules::PluralRules>,
-    _current_timeago_language: Option<Rc<Box<dyn timeago::Language>>>,
+    _current_timeago_formatter: Option<Rc<timeago::Formatter<timeago::BoxedLanguage>>>,
     _locale_path_components: Rc<HashMap<Locale, String>>,
     _supported_locales: Rc<HashSet<Locale>>,
     _default_locale: Locale,
     _fallbacks: Rc<HashMap<Locale, Vec<Locale>>>,
-    _assets: Rc<RefCell<HashMap<Locale, serde_json::Value>>>,
+    _assets: Rc<HashMap<Locale, serde_json::Value>>,
     _assets_src: String,
     _assets_base_file_names: Vec<String>,
     _assets_auto_clean: bool,
@@ -84,12 +79,12 @@ impl LocaleMap {
             _current_locale: None,
             _current_cardinal_plural_rules: None,
             _current_ordinal_plural_rules: None,
-            _current_timeago_language: None,
+            _current_timeago_formatter: None,
             _locale_path_components: Rc::new(locale_path_components),
             _supported_locales: Rc::new(supported_locales),
             _default_locale: parse_locale(&default_locale).unwrap(),
             _fallbacks: Rc::new(fallbacks),
-            _assets: Rc::new(RefCell::new(HashMap::new())),
+            _assets: Rc::new(HashMap::new()),
             _assets_src: options._assets.borrow()._src.borrow().clone(),
             _assets_base_file_names: options._assets.borrow()._base_file_names.borrow().iter().map(|s| s.clone()).collect(),
             _assets_auto_clean: options._assets.borrow()._auto_clean.get(),
@@ -133,30 +128,28 @@ impl LocaleMap {
             }
             new_assets.insert(locale.clone(), res.unwrap());
         }
-
         if self._assets_auto_clean {
-            self._assets.borrow_mut().clear();
+            Rc::get_mut(&mut self._assets).unwrap().clear();
         }
 
-        let mut assets_output = self._assets.borrow_mut();
         for (locale, root) in new_assets {
-            assets_output.insert(locale, root);
+            Rc::get_mut(&mut self._assets).unwrap().insert(locale, root);
         }
         self._current_locale = Some(new_locale.clone());
         let new_locale_code = unic_langid::LanguageIdentifier::from_bytes(new_locale.clone().standard_tag().to_string().as_ref()).unwrap();
         self._current_ordinal_plural_rules = self.load_plural_rules(new_locale_code.clone(), intl_pluralrules::PluralRuleType::ORDINAL);
         self._current_cardinal_plural_rules = self.load_plural_rules(new_locale_code.clone(), intl_pluralrules::PluralRuleType::CARDINAL);
-        self._current_timeago_language = None;
+        self._current_timeago_formatter = None;
 
         let new_isolang_lang = isolang::Language::from_639_1(new_locale_code.clone().language.as_str()).unwrap();
         let new_timeago_lang = timeago::from_isolang(new_isolang_lang);
 
         if let Some(l) = new_timeago_lang {
-            self._current_timeago_language = Some(Rc::new(l));
+            self._current_timeago_formatter = Some(Rc::new(timeago::Formatter::with_language(l)));
         }
 
-        if self._current_timeago_language.is_none() {
-            self._current_timeago_language = Some(Rc::new(Box::new(timeago::languages::english::English)));
+        if self._current_timeago_formatter.is_none() {
+            self._current_timeago_formatter = Some(Rc::new(timeago::Formatter::with_language(Box::new(timeago::languages::english::English))));
         }
 
         true
@@ -287,7 +280,7 @@ impl LocaleMap {
     }
 
     fn get_formatted_with_locale(&self, locale: Locale, id: &Vec<String>, vars: &HashMap<String, String>) -> Option<String> {
-        let message = self.resolve_id(self._assets.borrow().get(&locale), id);
+        let message = self.resolve_id(self._assets.get(&locale), id);
         if message.is_some() {
             return Some(self.apply_message(message.unwrap(), vars));
         }
@@ -352,52 +345,10 @@ impl LocaleMap {
     }
 
     pub fn format_relative_time(&self, duration: std::time::Duration) -> String {
-        let l = self._current_timeago_language.clone();
-        if l.is_none() {
+        if self._current_timeago_formatter.is_none() {
             return "undefined".to_string();
         }
-        let l = l.unwrap();
-        let secs = duration.as_secs();
-        if secs < 60 {
-            return l.too_low().to_string();
-        }
-        let mins = secs / 60;
-        if mins < 60 {
-            let m = mins.to_string() + " " + l.get_word(timeago::TimeUnit::Minutes, mins);
-            let ago = l.ago().to_string();
-            return format!("{} {}", if l.place_ago_before() { ago.clone() } else { m.clone() }, if l.place_ago_before() { m } else { ago });
-        }
-        let hours = mins / 60;
-        if hours < 60 {
-            let h = hours.to_string() + " " + l.get_word(timeago::TimeUnit::Hours, hours);
-            let ago = l.ago().to_string();
-            return format!("{} {}", if l.place_ago_before() { ago.clone() } else { h.clone() }, if l.place_ago_before() { h } else { ago });
-        }
-        let days = hours / 24;
-        if days < 30 {
-            let d = days.to_string() + " " + l.get_word(timeago::TimeUnit::Days, days);
-            let ago = l.ago().to_string();
-            return format!("{} {}", if l.place_ago_before() { ago.clone() } else { d.clone() }, if l.place_ago_before() { d } else { ago });
-        }
-        let weeks = days / 7;
-        if weeks < 5 {
-            let w = weeks.to_string() + " " + l.get_word(timeago::TimeUnit::Weeks, weeks);
-            let ago = l.ago().to_string();
-            return format!("{} {}", if l.place_ago_before() { ago.clone() } else { w.clone() }, if l.place_ago_before() { w } else { ago });
-        }
-        let mut months = weeks / 4;
-        if months == 0 {
-            months = 1;
-        }
-        if months < 13 {
-            let m = months.to_string() + " " + l.get_word(timeago::TimeUnit::Months, months);
-            let ago = l.ago().to_string();
-            return format!("{} {}", if l.place_ago_before() { ago.clone() } else { m.clone() }, if l.place_ago_before() { m } else { ago });
-        }
-        let years = months / 12;
-        let y = years.to_string() + " " + l.get_word(timeago::TimeUnit::Years, years);
-        let ago = l.ago().to_string();
-        return format!("{} {}", if l.place_ago_before() { ago.clone() } else { y.clone() }, if l.place_ago_before() { y } else { ago });
+        self._current_timeago_formatter.borrow().clone().unwrap().convert(duration)
     }
 }
 
@@ -407,7 +358,7 @@ impl Clone for LocaleMap {
             _current_locale: self._current_locale.clone(),
             _current_cardinal_plural_rules: self._current_cardinal_plural_rules.clone(),
             _current_ordinal_plural_rules: self._current_ordinal_plural_rules.clone(),
-            _current_timeago_language: self._current_timeago_language.clone(),
+            _current_timeago_formatter: self._current_timeago_formatter.clone(),
             _locale_path_components: self._locale_path_components.clone(),
             _supported_locales: self._supported_locales.clone(),
             _default_locale: self._default_locale.clone(),

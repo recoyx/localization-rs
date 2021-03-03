@@ -49,7 +49,7 @@ pub struct LocaleMap {
     _current_locale: Option<Locale>,
     _current_ordinal_plural_rules: Option<intl_pluralrules::PluralRules>,
     _current_cardinal_plural_rules: Option<intl_pluralrules::PluralRules>,
-    _current_timeago_formatter: Option<Rc<timeago::Formatter<timeago::BoxedLanguage>>>,
+    _current_relative_time_formatter: Option<Rc<super::relative_time_format::Formatter>>,
     _locale_path_components: Rc<HashMap<Locale, String>>,
     _supported_locales: Rc<HashSet<Locale>>,
     _default_locale: Locale,
@@ -79,7 +79,7 @@ impl LocaleMap {
             _current_locale: None,
             _current_cardinal_plural_rules: None,
             _current_ordinal_plural_rules: None,
-            _current_timeago_formatter: None,
+            _current_relative_time_formatter: None,
             _locale_path_components: Rc::new(locale_path_components),
             _supported_locales: Rc::new(supported_locales),
             _default_locale: parse_locale(&default_locale).unwrap(),
@@ -104,8 +104,8 @@ impl LocaleMap {
         self._current_locale.clone()
     }
 
-    pub fn create_relative_time_formatter(&self) -> timeago::Formatter<timeago::BoxedLanguage> {
-        self._current_timeago_formatter.clone().unwrap().as_ref().clone()
+    pub fn create_relative_time_formatter(&self) -> super::relative_time_format::Formatter {
+        self._current_relative_time_formatter.clone().unwrap().as_ref().clone()
     }
 
     /// Equivalent to `load()` method.
@@ -143,17 +143,17 @@ impl LocaleMap {
         let new_locale_code = unic_langid::LanguageIdentifier::from_bytes(new_locale.clone().standard_tag().to_string().as_ref()).unwrap();
         self._current_ordinal_plural_rules = self.load_plural_rules(new_locale_code.clone(), intl_pluralrules::PluralRuleType::ORDINAL);
         self._current_cardinal_plural_rules = self.load_plural_rules(new_locale_code.clone(), intl_pluralrules::PluralRuleType::CARDINAL);
-        self._current_timeago_formatter = None;
+        self._current_relative_time_formatter = None;
 
         let new_isolang_lang = isolang::Language::from_639_1(new_locale_code.clone().language.as_str()).unwrap();
         let new_timeago_lang = timeago::from_isolang(new_isolang_lang);
 
         if let Some(l) = new_timeago_lang {
-            self._current_timeago_formatter = Some(Rc::new(timeago::Formatter::with_language(l)));
+            self._current_relative_time_formatter = Some(Rc::new(timeago::Formatter::with_language(l)));
         }
 
-        if self._current_timeago_formatter.is_none() {
-            self._current_timeago_formatter = Some(Rc::new(timeago::Formatter::with_language(Box::new(timeago::languages::english::English))));
+        if self._current_relative_time_formatter.is_none() {
+            self._current_relative_time_formatter = Some(Rc::new(timeago::Formatter::with_language(Box::new(timeago::languages::english::English))));
         }
 
         true
@@ -349,10 +349,10 @@ impl LocaleMap {
     }
 
     pub fn format_relative_time(&self, duration: std::time::Duration) -> String {
-        if self._current_timeago_formatter.is_none() {
+        if self._current_relative_time_formatter.is_none() {
             return "undefined".to_string();
         }
-        self._current_timeago_formatter.borrow().clone().unwrap().convert(duration)
+        self._current_relative_time_formatter.borrow().clone().unwrap().convert(duration)
     }
 }
 
@@ -362,7 +362,7 @@ impl Clone for LocaleMap {
             _current_locale: self._current_locale.clone(),
             _current_cardinal_plural_rules: self._current_cardinal_plural_rules.clone(),
             _current_ordinal_plural_rules: self._current_ordinal_plural_rules.clone(),
-            _current_timeago_formatter: self._current_timeago_formatter.clone(),
+            _current_relative_time_formatter: self._current_relative_time_formatter.clone(),
             _locale_path_components: self._locale_path_components.clone(),
             _supported_locales: self._supported_locales.clone(),
             _default_locale: self._default_locale.clone(),

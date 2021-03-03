@@ -19,3 +19,7 @@ pub use locale_map::{
 pub mod pluralrules {
     pub use intl_pluralrules::{PluralCategory, PluralRuleType};
 }
+pub mod relative_time_format {
+    pub type Formatter = timeago::Formatter<timeago::BoxedLanguage>;
+    pub use timeago::TimeUnit;
+}

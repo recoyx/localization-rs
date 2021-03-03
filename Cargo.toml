@@ -24,8 +24,7 @@ intl_pluralrules = "7.0.1"
 unic-langid = "0.9.0"
 lazy_static = "1.4.0"
 lazy-regex = "0.1.4"
-#timeago = { version = "0.2.1", features = ["isolang", "translations"] }
-timeago = { git = "https://github.com/vi/timeago", features = ["isolang", "translations"] }
+timeago = { version = "0.2.3", features = ["isolang", "translations"] }
 isolang = "1.0.0"
 icu_locid = "0.1.0"
 icu_datetime = "0.1.0"

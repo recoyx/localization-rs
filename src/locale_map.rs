@@ -236,9 +236,11 @@ impl LocaleMap {
     }
 
     fn enumerate_fallbacks(&self, locale: Locale, output: &mut HashSet<Locale>) {
-        for item in self._fallbacks.get(&locale).iter() {
-            output.insert(item.clone());
-            self.enumerate_fallbacks(item.clone(), output);
+        for list in self._fallbacks.get(&locale).iter() {
+            for item in list.iter() {
+                output.insert(item.clone());
+                self.enumerate_fallbacks(item.clone(), output);
+            }
         }
     }
 

@@ -47,10 +47,6 @@ macro_rules! localization_vars {
     };
 }
 
-lazy_static! {
-    static ref ICU_PROVIDER: icu_provider_fs::FsDataProvider = icu_testdata::get_provider();
-}
-
 /// Flexible locale mapping with support for loading message resources,
 /// plural rule selection and relative-time formatting.
 pub struct LocaleMap {
@@ -207,7 +203,11 @@ impl LocaleMap {
             },
             LocaleMapLoaderType::Http => {
                 for base_name in self._assets_base_file_names.iter() {
-                    let res_path = format!("{}/{}/{}.json", self._assets_src, self._locale_path_components.get(locale).unwrap(), base_name);
+                    let locale_path_comp = self._locale_path_components.get(locale);
+                    if locale_path_comp.is_none() {
+                        panic!("Fallback locale is not supported a locale: {}", locale.standard_tag().to_string());
+                    }
+                    let res_path = format!("{}/{}/{}.json", self._assets_src, locale_path_comp.unwrap(), base_name);
                     let content = reqwest::get(reqwest::Url::parse(res_path.clone().as_ref()).unwrap()).await;
                     if content.is_err() {
                         println!("Failed to load resource at {}.", res_path);
@@ -236,11 +236,9 @@ impl LocaleMap {
     }
 
     fn enumerate_fallbacks(&self, locale: Locale, output: &mut HashSet<Locale>) {
-        for list in self._fallbacks.get(&locale).iter() {
-            for item in list.iter() {
-                output.insert(item.clone());
-                self.enumerate_fallbacks(item.clone(), output);
-            }
+        for item in self._fallbacks.get(&locale).iter() {
+            output.insert(item.clone());
+            self.enumerate_fallbacks(item.clone(), output);
         }
     }
 
@@ -322,7 +320,7 @@ impl LocaleMap {
         // regex!(r"\$(\$|[A-Za-z0-9_-]+)").replace_all(&message, R { _vars: vars }).as_ref().to_string()
         regex!(r"\$(\$|[A-Za-z0-9_-]+)").replace_all(&message, |s: &regex::Captures<'_>| {
             let s = s.get(0).unwrap().as_str();
-            if s == "$" {
+            if s == "$$" {
                 "$"
             } else {
                 let v = vars.get(&s.to_string().replace("$", ""));
@@ -378,26 +376,6 @@ impl LocaleMap {
     /// Formats a duration into relative-time language, emitting one item.
     pub fn format_relative_time(&self, duration: std::time::Duration) -> String {
         self.create_relative_time_formatter().convert(duration)
-    }
-
-    /// Creates a date and time formatter. For more details, refer to the [icu_datetime crate](https://crates.io/crates/icu_datetime).
-    pub fn create_date_time_formatter(&self, options: &super::date_time_format::DateTimeFormatOptions) -> super::DateTimeFormatter {
-        if self._current_locale.is_none() {
-            panic!("No locale has been loaded.");
-        }
-        let locale = self._current_locale.clone().unwrap();
-        let mut lid: Result<icu_locid::LanguageIdentifier, icu_locid::ParserError> = (locale.standard_tag().get_language().to_string()
-            + (if locale.standard_tag().get_region().is_some() { locale.standard_tag().get_region().unwrap().to_string() } else { "".to_string() }).as_ref()
-        ).parse();
-        if lid.is_err() {
-            lid = "en".parse();
-        }
-        let lid = lid.unwrap();
-        let mut r = super::date_time_format::DateTimeFormatter::try_new(lid, &*ICU_PROVIDER, options);
-        if r.is_err() {
-            r = super::date_time_format::DateTimeFormatter::try_new("en".parse().unwrap(), &*ICU_PROVIDER, options);
-        }
-        r.unwrap()
     }
 }
 
